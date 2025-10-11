@@ -14,8 +14,36 @@ func ErrHndl(err error) {
 	log.Fatal(err)
 }
 
+/*
+create HTTP GET request from the passed endpoint and parameters, send the
+request with an HTTP client and get the JSON response, unmarshal the JSON into
+the struct passed as [T]
+*/
+func GetAndMakeDS[T any](endpt string, params []Param) (*T, error) {
+	// create get request
+	gr := HTTPGet{
+		Base:     BASE,
+		Endpoint: endpt,
+		Params:   params,
+	}
+
+	// get JSON response
+	js, err := gr.SendGetRequest()
+	if err != nil {
+		return nil, err
+	}
+
+	// create & return the data structure passed at [T] from JSON response
+	ds, err := MakeDS[T](js)
+	if err != nil {
+		return nil, err
+	}
+	return ds, nil
+}
+
 func main() {
-	err := GetAndMakeDS[RespSchedule]("v1/schedule",
+	// schedule endpoint
+	schedule, err := GetAndMakeDS[RespSchedule]("v1/schedule",
 		[]Param{
 			{Key: "sportId", Val: "1"},
 			{Key: "season", Val: "2025"},
@@ -25,27 +53,12 @@ func main() {
 	if err != nil {
 		ErrHndl(err)
 	}
-	err = GetAndMakeDS[RespTeams]("v1/teams", []Param{{Key: "158"}})
+	fmt.Println(schedule)
+
+	// teams endpoint
+	teams, err := GetAndMakeDS[RespTeams]("v1/teams", []Param{{Key: "158"}})
 	if err != nil {
 		ErrHndl(err)
 	}
-}
-
-func GetAndMakeDS[T any](endpt string, params []Param) error {
-	gr := HTTPGet{
-		Base:     BASE,
-		Endpoint: endpt,
-		Params:   params,
-	}
-
-	js, err := gr.SendGetRequest()
-	if err != nil {
-		return err
-	}
-	rs, err := MakeDS[T](js)
-	if err != nil {
-		return err
-	}
-	fmt.Println(rs)
-	return nil
+	fmt.Println(teams)
 }
