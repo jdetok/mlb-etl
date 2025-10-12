@@ -42,13 +42,14 @@ func main() {
 		[]Param{
 			{Key: "sportId", Val: "1"},
 			{Key: "season", Val: "2025"},
-			{Key: "gameType", Val: "D"},
+			{Key: "gameType", Val: "R"},
 		},
 	)
 	if err != nil {
 		ErrHndl(err)
 	}
-	// schedule.GameDatesToDT()
+	schedule.CleanGamesData()
+
 	// fmt.Println(schedule)
 	if err := schedule.InsertGames(db); err != nil {
 		ErrHndl(err)

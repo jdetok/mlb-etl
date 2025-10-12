@@ -74,7 +74,8 @@ type MLBGameTeam struct {
 type MLBSeriesRecord struct {
 	Wins   uint8  `json:"wins"`
 	Losses uint8  `json:"losses"`
-	Pct    string `json:"pct"`
+	PctStr string `json:"pct"`
+	Pct    float64
 }
 
 // derived from teams endpoint, after RespSchedule struct exists

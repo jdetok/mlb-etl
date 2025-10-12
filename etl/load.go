@@ -29,6 +29,7 @@ func (rs *RespSchedule) InsertGames(db *sql.DB) error {
 		return err
 	}
 	var rows [][]any
+	// vals in order of DB insert
 	for _, g := range rs.Dates[0].Games {
 		var vals = []any{
 			g.GID, g.GUID, g.Type, g.Season, g.DateTime, g.DateStr,
