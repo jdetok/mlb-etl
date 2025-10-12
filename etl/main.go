@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
+
+	"github.com/jdetok/golib/pgresd"
 )
 
 // MLB stats api base url
@@ -15,6 +17,14 @@ func ErrHndl(err error) {
 }
 
 func main() {
+	// database connection
+	pg := pgresd.GetEnvPG()
+	pg.MakeConnStr()
+	db, err := pg.Conn()
+	if err != nil {
+		ErrHndl(err)
+	}
+	fmt.Println("database setup:", db.Stats().OpenConnections)
 	// schedule endpoint
 	schedule, err := GetAndMakeDS[RespSchedule]("v1/schedule",
 		[]Param{
