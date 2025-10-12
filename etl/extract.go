@@ -1,16 +1,15 @@
 package main
 
+/* extract.go
+this file should contain functions & types to extract data from the MLB API
+i.e. func to build & send a get request & return the JSON as a slice of bytes
+*/
+
 import (
 	"fmt"
 	"io"
 	"net/http"
 )
-
-// parameters for query string
-type Param struct {
-	Key string
-	Val string
-}
 
 // get request struct
 type HTTPGet struct {
@@ -18,6 +17,12 @@ type HTTPGet struct {
 	Endpoint string
 	Params   []Param
 	URL      string // call BuildURL
+}
+
+// parameters for query string
+type Param struct {
+	Key string
+	Val string
 }
 
 /*
@@ -46,7 +51,11 @@ func (gr *HTTPGet) SendGetRequest() ([]byte, error) {
 	return body, nil
 }
 
-// concat HTTPGet items together to build query string
+/*
+concat HTTPGet items together to build query string
+if only a single value is passed (e.g. []Param{{Key: "158"}}), only that value
+will be appended to the url (preceded by a /) -> this looks like /v1/teams/158
+*/
 func (gr *HTTPGet) BuildURL() string {
 	var url string = fmt.Sprintf("%s/%s", gr.Base, gr.Endpoint)
 

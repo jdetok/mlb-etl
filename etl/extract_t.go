@@ -1,5 +1,9 @@
 package main
 
+/* extract_t.go
+this file should contain data structures to unmarshal response JSON into
+*/
+
 import "time"
 
 type RespSchedule struct {
@@ -61,4 +65,44 @@ type MLBSeriesRecord struct {
 	Wins   uint8  `json:"wins"`
 	Losses uint8  `json:"losses"`
 	Pct    string `json:"pct"`
+}
+
+// derived from schedule endpoint
+type MLBObj struct {
+	ID   uint16 `json:"id"`
+	Name string `json:"name"`
+	Link string `json:"link"`
+}
+
+// derived from teams endpoint, after RespSchedule struct exists
+type RespTeams struct {
+	CR    string       `json:"copyright"`
+	Teams []TeamDetail `json:"teams"`
+}
+
+type TeamDetail struct {
+	SpringLeague  MLBSpringLeague `json:"springLeague"`
+	AllStarSt     string          `json:"alStarStatus"`
+	MLBObj                        // capture team id, name, link
+	Season        uint16          `json:"season"`
+	Venue         MLBObj          `json:"venue"`
+	SpringVenue   MLBObj          `json:"springVenue"`
+	Code          string          `json:"teamCode"`
+	FileCode      string          `json:"fileCode"`
+	Abbr          string          `json:"abbreviation"`
+	TeamName      string          `json:"teamName"`
+	Location      string          `json:"locationName"`
+	FirstYear     string          `json:"firstYearOfPlay"`
+	League        MLBObj          `json:"league"`
+	Division      MLBObj          `json:"division"`
+	Sport         MLBObj          `json:"sport"`
+	ShortName     string          `json:"shortName"`
+	FranchiseName string          `json:"franchiseName"`
+	ClubName      string          `json:"clubName"`
+	Active        bool            `json:"active"`
+}
+
+type MLBSpringLeague struct {
+	MLBObj
+	Abbr string `json:"abbreviation"`
 }
