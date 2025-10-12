@@ -26,7 +26,8 @@ func main() {
 	if err != nil {
 		ErrHndl(err)
 	}
-	fmt.Println(schedule)
+	schedule.GameDatesToDT()
+	// fmt.Println(schedule)
 
 	// teams endpoint
 	teams, err := GetAndMakeDS[RespTeams]("v1/teams", []Param{{Key: "158"}})

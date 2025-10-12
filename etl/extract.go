@@ -31,7 +31,6 @@ send request with client, read the body of the response
 */
 func (gr *HTTPGet) SendGetRequest() ([]byte, error) {
 	url := gr.BuildURL()
-	// fmt.Println(url)
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
