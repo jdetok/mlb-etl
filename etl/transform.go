@@ -6,6 +6,10 @@ import (
 	"time"
 )
 
+/* TODO
+- convert pct formatted by JSON as ".555" to a float
+*/
+
 /*
 GENERIC JSON TO GO STRUCT UNMARSHALER
 creates a variable of the desired type, attempts to unmarshal the passed js

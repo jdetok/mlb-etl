@@ -39,8 +39,9 @@ type MLBGame struct {
 	IsTie           bool          `json:"isTie"`
 	DayType         string        `json:"gameDayType"`
 	DayNight        string        `json:"dayNight"`
-	Description     string        `json:"description"`
-	NumInSeries     uint8         `json:"gameInSeries"`
+	Description     string        `json:"description"` // only present in playoffs
+	GamesInSeries   uint8         `json:"gamesInSeries"`
+	GameNum         uint8         `json:"seriesGameNumber"`
 	SeasonDisplay   string        `json:"seasonDisplay"`
 	SeriesDesc      string        `json:"seriesDescription"`
 	IfNecessary     string        `json:"ifNecessary"`

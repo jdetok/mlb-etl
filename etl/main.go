@@ -27,11 +27,12 @@ func main() {
 		ErrHndl(err)
 	}
 	schedule.GameDatesToDT()
+	fmt.Println(schedule)
 
 	// teams endpoint
-	teams, err := GetAndMakeDS[RespTeams]("v1/teams", []Param{{Key: "158"}})
-	if err != nil {
-		ErrHndl(err)
-	}
-	fmt.Println(teams)
+	// teams, err := GetAndMakeDS[RespTeams]("v1/teams", []Param{{Key: "158"}})
+	// if err != nil {
+	// 	ErrHndl(err)
+	// }
+	// fmt.Println(teams)
 }

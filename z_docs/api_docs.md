@@ -11,5 +11,8 @@
 ## sportId parameter
 - 1 for MLB
 
+### seriesNumber field (within home/away objects)
+- seems to be the count of series that team has played in so far that year
+
 # /game endpoint
 - /game/{gamePk}/linescore seems to give number of innings and final score infos
