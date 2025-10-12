@@ -1,0 +1,26 @@
+services:
+  pg_mlb_dev:
+    build: .
+    env_file: 
+      - .env
+    container_name: pg_mlb_dev
+    ports:
+      - "3456:5432"
+    networks:
+      pg_mlb_net:
+        ipv4_address: 10.0.42.182
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
+
+networks:
+  pg_mlb_net:
+    name: pg_mlb_net
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.0.42.0/24
+          gateway: 10.0.42.1

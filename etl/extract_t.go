@@ -6,6 +6,13 @@ this file should contain data structures to unmarshal response JSON into
 
 import "time"
 
+// derived from schedule endpoint
+type MLBObj struct {
+	ID   uint16 `json:"id"`
+	Name string `json:"name"`
+	Link string `json:"link"`
+}
+
 type RespSchedule struct {
 	Dates []MLBDate `json:"dates"`
 }
@@ -65,13 +72,6 @@ type MLBSeriesRecord struct {
 	Wins   uint8  `json:"wins"`
 	Losses uint8  `json:"losses"`
 	Pct    string `json:"pct"`
-}
-
-// derived from schedule endpoint
-type MLBObj struct {
-	ID   uint16 `json:"id"`
-	Name string `json:"name"`
-	Link string `json:"link"`
 }
 
 // derived from teams endpoint, after RespSchedule struct exists
