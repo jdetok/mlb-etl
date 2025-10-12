@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 
@@ -15,16 +16,27 @@ func ErrHndl(err error) {
 	fmt.Println("an error occured: killing program")
 	log.Fatal(err)
 }
-
-func main() {
-	// database connection
+func ConnectDB() (*sql.DB, error) {
 	pg := pgresd.GetEnvPG()
 	pg.MakeConnStr()
 	db, err := pg.Conn()
 	if err != nil {
+		return nil, err
+	}
+	return db, nil
+}
+func main() {
+	// database connection
+	db, err := ConnectDB()
+	if err != nil {
 		ErrHndl(err)
 	}
-	fmt.Println("database setup:", db.Stats().OpenConnections)
+	// fmt.Println("database setup:", db.Stats().OpenConnections)
+	// cols, err := pgresd.ColumnsInTable(db, "game_from_schedule")
+	// if err != nil {
+	// 	ErrHndl(err)
+	// }
+	// fmt.Println(cols)
 	// schedule endpoint
 	schedule, err := GetAndMakeDS[RespSchedule]("v1/schedule",
 		[]Param{
@@ -36,8 +48,11 @@ func main() {
 	if err != nil {
 		ErrHndl(err)
 	}
-	schedule.GameDatesToDT()
-	fmt.Println(schedule)
+	// schedule.GameDatesToDT()
+	// fmt.Println(schedule)
+	if err := schedule.InsertGames(db); err != nil {
+		ErrHndl(err)
+	}
 
 	// teams endpoint
 	// teams, err := GetAndMakeDS[RespTeams]("v1/teams", []Param{{Key: "158"}})

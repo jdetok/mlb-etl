@@ -8,6 +8,9 @@ import (
 
 /* TODO
 - convert pct formatted by JSON as ".555" to a float
+pct, _ := strconv.ParseFloat(strings.TrimPrefix(rec.Pct, "."), 64)
+pct = pct / 1000  // convert "505" → 0.505
+
 */
 
 /*
