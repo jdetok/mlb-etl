@@ -64,6 +64,8 @@ func (gr *HTTPGet) BuildURL() {
 		// HANDLE base/endpoint/value e.g. v1/teams/158
 		if lenP == 1 && gr.Params[0].Val == "" {
 			url += fmt.Sprintf("/%s", gr.Params[0].Key)
+			gr.URL = url
+			return
 		}
 		url += "?" // start query string
 		for i, p := range gr.Params {

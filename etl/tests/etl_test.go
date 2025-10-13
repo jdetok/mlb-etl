@@ -57,9 +57,17 @@ func TestETLInterface(t *testing.T) {
 	}
 
 	// TODO: FINISH REST OF TEAMS PROCESS (BUILD TABLE)
-	te := etl.MakeETL(&etl.TeamDetail{},
-		"intake", "team_detail", "id", "v1/teams", []etl.Param{{Key: "138"}})
+	te := etl.MakeETL(&etl.RespTeams{},
+		"intake", "team_detail", "id", "v1/teams", []etl.Param{{Key: "158"}})
 
+	if err := te.ExtractData(); err != nil {
+		t.Error(err)
+	}
+
+	// call the appropriate struct method from the interface
+	if err := te.Dataset.CleanTempFields(); err != nil {
+		t.Error(err)
+	}
 	fmt.Println(te.Request.URL)
 
 }

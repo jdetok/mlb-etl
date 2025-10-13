@@ -3,7 +3,6 @@ package etl
 
 import (
 	"database/sql"
-	"fmt"
 
 	"github.com/jdetok/golib/pgresd"
 )
@@ -14,7 +13,7 @@ func (rs *RespSchedule) InsertGames(db *sql.DB) error {
 	schema := "intake"
 	pkey := "id"
 	cols, err := pgresd.ColumnsInTable(db, tbl)
-	fmt.Println(cols)
+	// fmt.Println(cols)
 	if err != nil {
 		return err
 	}

@@ -54,7 +54,6 @@ func (e *ETL) RunFullETL(db *sql.DB) error {
 
 	rows := e.Dataset.SliceInsertRows()
 
-	fmt.Printf("MakeInsert | cols=%d rows=%d\n", len(cols), len(rows))
 	e.InSt = pgresd.MakeInsert(e.PgSchema, e.PgTable, e.PgPKey, cols, rows)
 
 	return e.InSt.InsertFast(db, &e.RowCount)
@@ -70,7 +69,7 @@ func (e *ETL) ExtractData() error {
 		return fmt.Errorf("** failed to send get request to %s\n%w", e.Request.URL, err)
 	}
 	fmt.Println(e.Request.URL)
-	fmt.Println(string(js))
+	// fmt.Println(string(js))
 
 	// populate e.Dataset by unmarshalling json
 	if err := e.ConvertJSONResp(js); err != nil {

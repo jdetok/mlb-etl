@@ -1,9 +1,9 @@
 package etl
 
-func (td *TeamDetail) CleanTempFields() error {
+func (rt *RespTeams) CleanTempFields() error {
 	return nil
 }
 
-func (td *TeamDetail) SliceInsertRows() [][]any {
+func (rt *RespTeams) SliceInsertRows() [][]any {
 	return nil
 }

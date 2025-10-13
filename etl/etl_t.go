@@ -7,7 +7,7 @@ const BASE string = "https://statsapi.mlb.com/api"
 
 // idea is to implement in all the structs returned JSON is unmarshalled into
 // then can call that and do the individual logic for each data set to get into
-// the intended table. idea while trying to convert InsertGames to work with other structs
+// the intende d table. idea while trying to convert InsertGames to work with other structs
 type ETLProcess interface {
 	CleanTempFields() error   // run struct methods to convert temp fields
 	SliceInsertRows() [][]any // run struct methods to get rows variable for Insert
