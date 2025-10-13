@@ -1,6 +1,7 @@
 package etl
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/jdetok/golib/pgresd"
@@ -40,6 +41,7 @@ func TestETLInterface(t *testing.T) {
 		t.Errorf("failed to connect to database | %v\n", err)
 	}
 
+	// SCHEDULE ENDPOINT TEST
 	// schema | table | primary key | endpoint | endpoint parameters
 	e := etl.MakeETL(&etl.RespSchedule{},
 		"intake", "game_from_schedule", "id", "v1/schedule",
@@ -53,4 +55,11 @@ func TestETLInterface(t *testing.T) {
 	if err := e.RunFullETL(db); err != nil {
 		t.Error(err)
 	}
+
+	// TODO: FINISH REST OF TEAMS PROCESS (BUILD TABLE)
+	te := etl.MakeETL(&etl.TeamDetail{},
+		"intake", "team_detail", "id", "v1/teams", []etl.Param{{Key: "138"}})
+
+	fmt.Println(te.Request.URL)
+
 }
