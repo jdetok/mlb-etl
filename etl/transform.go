@@ -1,12 +1,9 @@
 // primarily functions attached to response structs - clean data before inserting into db
-package main
+package etl
 
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
-	"strings"
-	"time"
 )
 
 // GENERIC JSON TO GO STRUCT UNMARSHALER
@@ -21,49 +18,11 @@ func MakeDS[T any](js []byte) (*T, error) {
 	return &v, nil
 }
 
-// convert all TmpDateTime to DateTime in schedule response
-func (rs *RespSchedule) CleanGamesData() error {
-	for _, d := range rs.Dates {
-		for _, g := range d.Games {
-			if err := g.toDateTime(); err != nil {
-				return err
-			}
-			if err := g.toFloats(); err != nil {
-				return err
-			}
-			// fmt.Println(g.TmpDateTime, "|||", g.DateTime)
-		}
+// return string value if the string is greater than 1
+// change to accept the number to check
+func checkLen(str string) string {
+	if len(str) > 1 {
+		return str
 	}
-	return nil
-}
-
-// convert string TmpDateTime to time.Time DateTime
-// RFC3339 format: 2025-10-04T18:08:00Z
-func (g *MLBGame) toDateTime() error {
-	dt, err := time.Parse(time.RFC3339, g.TmpDateTime)
-	if err != nil {
-		return err
-	}
-	g.DateTime = dt
-	return nil
-}
-
-// - convert pct formatted by JSON as ".555" to a float
-func (r *MLBSeriesRecord) pctToFloat() error {
-	pct, err := strconv.ParseFloat(strings.TrimPrefix(r.PctStr, "."), 64)
-	if err != nil {
-		return err
-	}
-	r.Pct = pct / 1000 // convert "505" → 0.505
-	return nil
-}
-
-func (g *MLBGame) toFloats() error {
-	if err := g.Teams.Away.Record.pctToFloat(); err != nil {
-		return err
-	}
-	if err := g.Teams.Home.Record.pctToFloat(); err != nil {
-		return err
-	}
-	return nil
+	return ""
 }

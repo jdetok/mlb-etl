@@ -1,5 +1,5 @@
 // extract_t.go contains data structures to unmarshal response JSON into
-package main
+package etl
 
 import "time"
 

@@ -1,4 +1,4 @@
-package main
+package etl
 
 /* extract.go
 this file should contain functions & types to extract data from the MLB API
@@ -30,22 +30,22 @@ build URL form HTTPGet struct, create new client, create new get request,
 send request with client, read the body of the response
 */
 func (gr *HTTPGet) SendGetRequest() ([]byte, error) {
-	url := gr.BuildURL()
+	gr.BuildURL()
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", gr.URL, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create new HTTP request\n%w", err)
 	}
 
 	res, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("HTTP client failed to send HTTP request\n%w", err)
 	}
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read HTTP response body\n%w", err)
 	}
 	return body, nil
 }
@@ -55,7 +55,7 @@ concat HTTPGet items together to build query string
 if only a single value is passed (e.g. []Param{{Key: "158"}}), only that value
 will be appended to the url (preceded by a /) -> this looks like /v1/teams/158
 */
-func (gr *HTTPGet) BuildURL() string {
+func (gr *HTTPGet) BuildURL() {
 	var url string = fmt.Sprintf("%s/%s", gr.Base, gr.Endpoint)
 
 	// build query string if there are parameters
@@ -64,7 +64,6 @@ func (gr *HTTPGet) BuildURL() string {
 		// HANDLE base/endpoint/value e.g. v1/teams/158
 		if lenP == 1 && gr.Params[0].Val == "" {
 			url += fmt.Sprintf("/%s", gr.Params[0].Key)
-			return url
 		}
 		url += "?" // start query string
 		for i, p := range gr.Params {
@@ -74,6 +73,5 @@ func (gr *HTTPGet) BuildURL() string {
 			}
 		}
 	}
-
-	return url
+	gr.URL = url
 }
