@@ -1,7 +1,8 @@
 -- INTAKE TABLES CREATION FOR MLB POSTGRES DB - 10/12/2025
 -- these tables should accept the data fetched directly from the MLB API
 
-create table intake.game_from_schedule (
+-- FROM SCHEDULE ENDPOINT
+create table if not exists intake.game_from_schedule (
     id integer primary key,
     guid uuid,
     gtype char(1),
@@ -48,4 +49,41 @@ create table intake.game_from_schedule (
     series_desc varchar(255),
     if_necessary char(1),
     if_necessary_desc varchar(255)
-)
+);
+
+create table if not exists intake.team_detail (
+    id integer primary key,
+    name varchar(255),
+    api_link varchar(255),
+    season char(4),
+    abbr varchar(5),
+    team_cde varchar(5),
+    team_name varchar(255),
+    loc varchar(255),
+    league_id integer,
+    league varchar(255),
+    league_api_link varchar(255),
+    div_id integer,
+    division varchar(255),
+    div_api_link varchar(255),
+    sport_id integer,
+    sport varchar(255),
+    sport_api_link varchar(255),
+    short_name varchar(255),
+    franchise varchar(255),
+    club varchar(255),
+    first_year char(4),
+    file_cde varchar(10),
+    all_star_status varchar(2555), -- verify type
+    active boolean,
+    ven_id integer,
+    venue varchar(255),
+    ven_api_link varchar(255),
+    sven_id integer,
+    spring_venue varchar(255),
+    sven_api_link varchar(255),
+    slg_id integer,
+    spring_league varchar(255),
+    slg_api_link varchar(255),
+    slg_abbr varchar(5)
+);

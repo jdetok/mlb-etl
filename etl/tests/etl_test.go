@@ -64,6 +64,8 @@ func TestETLInterface(t *testing.T) {
 		t.Error(err)
 	}
 
+	fmt.Println(te.Dataset)
+
 	// call the appropriate struct method from the interface
 	if err := te.Dataset.CleanTempFields(); err != nil {
 		t.Error(err)

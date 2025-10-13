@@ -90,25 +90,25 @@ type RespTeams struct {
 
 // contains details for team from calling teams/{teamId}
 type TeamDetail struct {
-	SpringLeague  MLBSpringLeague `json:"springLeague"`
-	AllStarSt     string          `json:"alStarStatus"`
-	MLBObj                        // capture team id, name, link
-	Season        uint16          `json:"season"`
-	Venue         MLBObj          `json:"venue"`
-	SpringVenue   MLBObj          `json:"springVenue"`
-	Code          string          `json:"teamCode"`
-	FileCode      string          `json:"fileCode"`
-	Abbr          string          `json:"abbreviation"`
-	TeamName      string          `json:"teamName"`
-	Location      string          `json:"locationName"`
-	FirstYear     string          `json:"firstYearOfPlay"`
-	League        MLBObj          `json:"league"`
-	Division      MLBObj          `json:"division"`
-	Sport         MLBObj          `json:"sport"`
-	ShortName     string          `json:"shortName"`
-	FranchiseName string          `json:"franchiseName"`
-	ClubName      string          `json:"clubName"`
-	Active        bool            `json:"active"`
+	SpringLeague  MLBSpringLeague `json:"springLeague"` //--
+	AllStarSt     string          `json:"alStarStatus"` //--
+	MLBObj                        // capture team id, name, link --
+	Season        uint16          `json:"season"`          // --
+	Venue         MLBObj          `json:"venue"`           //--
+	SpringVenue   MLBObj          `json:"springVenue"`     //--
+	Code          string          `json:"teamCode"`        // --
+	FileCode      string          `json:"fileCode"`        //--
+	Abbr          string          `json:"abbreviation"`    //--
+	TeamName      string          `json:"teamName"`        //--
+	Location      string          `json:"locationName"`    //--
+	FirstYear     string          `json:"firstYearOfPlay"` //--
+	League        MLBObj          `json:"league"`          //--
+	Division      MLBObj          `json:"division"`        //--
+	Sport         MLBObj          `json:"sport"`           //--
+	ShortName     string          `json:"shortName"`       //--
+	FranchiseName string          `json:"franchiseName"`   //--
+	ClubName      string          `json:"clubName"`        //--
+	Active        bool            `json:"active"`          //--
 }
 
 // spring league section of teams endpoint
