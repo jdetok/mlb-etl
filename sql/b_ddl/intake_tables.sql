@@ -11,7 +11,7 @@ create table intake.game_from_schedule (
     state_abstract varchar(255),
     state char(1),
     state_desc varchar(255),
-    status char(1),
+    status varchar(2), -- originally char(1)
     start_time_tbd boolean,
     gcode_abstract char(1),
     -- home/away fields begin here

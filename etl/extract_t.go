@@ -1,22 +1,21 @@
+// extract_t.go contains data structures to unmarshal response JSON into
 package main
-
-/* extract_t.go
-this file should contain data structures to unmarshal response JSON into
-*/
 
 import "time"
 
-// derived from schedule endpoint
+// used for team, venue, league, etc
 type MLBObj struct {
 	ID   uint16 `json:"id"`
 	Name string `json:"name"`
 	Link string `json:"link"`
 }
 
+// outer struct for schedule endpoint
 type RespSchedule struct {
 	Dates []MLBDate `json:"dates"`
 }
 
+// contains slice of games for a particular date
 type MLBDate struct {
 	DateStr      string    `json:"date"`
 	TotalGames   uint8     `json:"totalGames"`
@@ -24,6 +23,7 @@ type MLBDate struct {
 	Games        []MLBGame `json:"games"`
 }
 
+// game data in schedule
 type MLBGame struct {
 	GID             uint64        `json:"gamePk"`
 	GUID            string        `json:"gameGuid"`
@@ -48,6 +48,7 @@ type MLBGame struct {
 	IfNecessaryDesc string        `json:"ifNecessaryDescription"`
 }
 
+// game status in schedule - only care about final
 type MLBGameStatus struct {
 	AbstractState string `json:"abstractGameState"`
 	StateCode     string `json:"codedGameState"`
@@ -57,11 +58,13 @@ type MLBGameStatus struct {
 	AbstractCode  string `json:"abstractGameCode"`
 }
 
+// home and away teams (record, detail, etc) for schedule endpoint
 type MLBGameTeams struct {
 	Away MLBGameTeam `json:"away"`
 	Home MLBGameTeam `json:"home"`
 }
 
+// team in schedule game
 type MLBGameTeam struct {
 	Record     MLBSeriesRecord `json:"leagueRecord"`
 	Detail     MLBObj          `json:"team"`
@@ -71,6 +74,7 @@ type MLBGameTeam struct {
 	SeriesNum  uint8           `json:"seriesNumber"`
 }
 
+// team's record in the series a game is in
 type MLBSeriesRecord struct {
 	Wins   uint8  `json:"wins"`
 	Losses uint8  `json:"losses"`
@@ -84,6 +88,7 @@ type RespTeams struct {
 	Teams []TeamDetail `json:"teams"`
 }
 
+// contains details for team from calling teams/{teamId}
 type TeamDetail struct {
 	SpringLeague  MLBSpringLeague `json:"springLeague"`
 	AllStarSt     string          `json:"alStarStatus"`
@@ -106,6 +111,7 @@ type TeamDetail struct {
 	Active        bool            `json:"active"`
 }
 
+// spring league section of teams endpoint
 type MLBSpringLeague struct {
 	MLBObj
 	Abbr string `json:"abbreviation"`

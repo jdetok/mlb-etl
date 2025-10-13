@@ -1,3 +1,4 @@
+// primarily functions attached to response structs - clean data before inserting into db
 package main
 
 import (
@@ -8,18 +9,9 @@ import (
 	"time"
 )
 
-/* TODO
-- convert pct formatted by JSON as ".555" to a float
-pct, _ := strconv.ParseFloat(strings.TrimPrefix(rec.Pct, "."), 64)
-pct = pct / 1000  // convert "505" → 0.505
-
-*/
-
-/*
-GENERIC JSON TO GO STRUCT UNMARSHALER
-creates a variable of the desired type, attempts to unmarshal the passed js
-slice of bytes into that variable. returns pointer to the variable if successful
-*/
+// GENERIC JSON TO GO STRUCT UNMARSHALER
+// creates a variable of the desired type, attempts to unmarshal the passed js
+// slice of bytes into that variable. returns pointer to the variable if successful
 func MakeDS[T any](js []byte) (*T, error) {
 	var v T
 	if err := json.Unmarshal(js, &v); err != nil {
@@ -45,10 +37,8 @@ func (rs *RespSchedule) CleanGamesData() error {
 	return nil
 }
 
-/*
-convert string TmpDateTime to time.Time DateTime
-RFC3339 format: 2025-10-04T18:08:00Z
-*/
+// convert string TmpDateTime to time.Time DateTime
+// RFC3339 format: 2025-10-04T18:08:00Z
 func (g *MLBGame) toDateTime() error {
 	dt, err := time.Parse(time.RFC3339, g.TmpDateTime)
 	if err != nil {

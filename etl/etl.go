@@ -1,16 +1,13 @@
+//	etl.go
+//
+// this file should contain functions that call different ETL functions
+// i.e a function to send a get request (extract), unmarshal the response into a
+// defined data structure (transform), & insert the data into a database (load)
 package main
 
-/* etl.go
-this file should contain functions that call different ETL functions
-i.e a function to send a get request (extract), unmarshal the response into a
-defined data structure (transform), & insert the data into a database (load)
-*/
-
-/*
-create HTTP GET request from the passed endpoint and parameters, send the
-request with an HTTP client and get the JSON response, unmarshal the JSON into
-the struct passed as [T]
-*/
+// create HTTP GET request from the passed endpoint and parameters, send the
+// request with an HTTP client and get the JSON response, unmarshal the JSON into
+// the struct passed as [T]
 func GetAndMakeDS[T any](endpt string, params []Param) (*T, error) {
 	// create get request
 	gr := HTTPGet{
