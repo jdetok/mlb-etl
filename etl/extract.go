@@ -62,8 +62,11 @@ func (gr *HTTPGet) BuildURL() {
 	lenP := len(gr.Params)
 	if lenP > 0 {
 		// HANDLE base/endpoint/value e.g. v1/teams/158
-		if lenP == 1 && gr.Params[0].Val == "" {
+		if lenP <= 2 && gr.Params[0].Val == "" { // either get this
 			url += fmt.Sprintf("/%s", gr.Params[0].Key)
+			if lenP == 2 && gr.Params[1].Val == "" { // for teams/158/roster
+				url += fmt.Sprintf("/%s", gr.Params[1].Key)
+			}
 			gr.URL = url
 			return // return early if only one
 		}

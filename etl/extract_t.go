@@ -5,7 +5,7 @@ import "time"
 
 // used for team, venue, league, etc
 type MLBObj struct {
-	ID   uint16 `json:"id"`
+	ID   uint64 `json:"id"`
 	Name string `json:"name"`
 	Link string `json:"link"`
 }
@@ -115,4 +115,37 @@ type TeamDetail struct {
 type MLBSpringLeague struct {
 	MLBObj
 	Abbr string `json:"abbreviation"`
+}
+
+// PLAYER STRUCTS
+type RespPeople struct {
+	CR     string      `json:"copyright"`
+	People []MLBPerson `json:"roster"`
+}
+
+type MLBPerson struct {
+	Detail   MLBPersonDetail `json:"person"`
+	Jersey   string          `json:"jerseyNumber"`
+	Position MLBPosition     `json:"position"`
+	Status   MLBPersonStatus `json:"status"`
+	TeamID   uint16          `json:"parentTeamId"`
+}
+
+// can't use MLBObj becaause json tag is fullName instead of name
+type MLBPersonDetail struct {
+	ID   uint64 `json:"id"`
+	Name string `json:"fullName"`
+	Link string `json:"link"`
+}
+
+type MLBPosition struct {
+	Code string `json:"code"`
+	Name string `json:"name"`
+	Type string `json:"type"`
+	Abbr string `json:"abbreviation"`
+}
+
+type MLBPersonStatus struct {
+	Code string `json:"code"`
+	Desc string `json:"description"`
 }

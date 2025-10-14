@@ -87,3 +87,17 @@ create table if not exists intake.team_detail (
     slg_api_link varchar(255),
     slg_abbr varchar(10)
 );
+
+create table if not exists intake.person (
+    id integer primary key,
+    name varchar(255),
+    api_link varchar(255),
+    jnum varchar(3),
+    posn_cde varchar(10),
+    posn varchar(50),
+    posn_type varchar(50),
+    posn_abbr varchar(10),
+    status varchar(10),
+    status_desc varchar(255),
+    team_id integer
+);
