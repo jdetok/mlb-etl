@@ -1,7 +1,6 @@
 package etl
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/jdetok/golib/pgresd"
@@ -58,18 +57,10 @@ func TestETLInterface(t *testing.T) {
 
 	// TODO: FINISH REST OF TEAMS PROCESS (BUILD TABLE)
 	te := etl.MakeETL(&etl.RespTeams{},
-		"intake", "team_detail", "id", "v1/teams", []etl.Param{{Key: "158"}})
+		"intake", "team_detail", "id", "v1/teams", []etl.Param{{}})
 
-	if err := te.ExtractData(); err != nil {
+	if err := te.RunFullETL(db); err != nil {
 		t.Error(err)
 	}
-
-	fmt.Println(te.Dataset)
-
-	// call the appropriate struct method from the interface
-	if err := te.Dataset.CleanTempFields(); err != nil {
-		t.Error(err)
-	}
-	fmt.Println(te.Request.URL)
 
 }

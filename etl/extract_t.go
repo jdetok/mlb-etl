@@ -90,8 +90,8 @@ type RespTeams struct {
 
 // contains details for team from calling teams/{teamId}
 type TeamDetail struct {
-	SpringLeague  MLBSpringLeague `json:"springLeague"` //--
-	AllStarSt     string          `json:"alStarStatus"` //--
+	SpringLeague  MLBSpringLeague `json:"springLeague"`  //--
+	AllStarSt     string          `json:"allStarStatus"` //--
 	MLBObj                        // capture team id, name, link --
 	Season        uint16          `json:"season"`          // --
 	Venue         MLBObj          `json:"venue"`           //--

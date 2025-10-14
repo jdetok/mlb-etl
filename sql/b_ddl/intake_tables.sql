@@ -56,8 +56,8 @@ create table if not exists intake.team_detail (
     name varchar(255),
     api_link varchar(255),
     season char(4),
-    abbr varchar(5),
-    team_cde varchar(5),
+    abbr varchar(10),
+    team_cde varchar(10),
     team_name varchar(255),
     loc varchar(255),
     league_id integer,
@@ -74,7 +74,7 @@ create table if not exists intake.team_detail (
     club varchar(255),
     first_year char(4),
     file_cde varchar(10),
-    all_star_status varchar(2555), -- verify type
+    all_star_status varchar(10), -- verify type
     active boolean,
     ven_id integer,
     venue varchar(255),
@@ -85,5 +85,5 @@ create table if not exists intake.team_detail (
     slg_id integer,
     spring_league varchar(255),
     slg_api_link varchar(255),
-    slg_abbr varchar(5)
+    slg_abbr varchar(10)
 );
