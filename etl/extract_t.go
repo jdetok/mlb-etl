@@ -1,6 +1,9 @@
 // extract_t.go contains data structures to unmarshal response JSON into
 package etl
 
+// TODO: teams/999/coaches/season=2020
+// sports/1/players (this one will be by season)
+
 import "time"
 
 // used for team, venue, league, etc
@@ -118,24 +121,61 @@ type MLBSpringLeague struct {
 }
 
 // PLAYER STRUCTS
-type RespPeople struct {
+type RespRoster struct {
 	CR     string      `json:"copyright"`
 	People []MLBPerson `json:"roster"`
 }
 
 type MLBPerson struct {
-	Detail   MLBPersonDetail `json:"person"`
+	Detail   MLBPlayerDetail `json:"person"`
 	Jersey   string          `json:"jerseyNumber"`
 	Position MLBPosition     `json:"position"`
-	Status   MLBPersonStatus `json:"status"`
+	Status   MLBAttr         `json:"status"`
 	TeamID   uint16          `json:"parentTeamId"`
 }
 
 // can't use MLBObj becaause json tag is fullName instead of name
-type MLBPersonDetail struct {
-	ID   uint64 `json:"id"`
-	Name string `json:"fullName"`
-	Link string `json:"link"`
+// use this for most of /sports/player general stats, also can be used
+// for only id fullname link
+type MLBPlayerDetail struct {
+	ID               uint64      `json:"id"`
+	Name             string      `json:"fullName"`
+	Link             string      `json:"link"`
+	FName            string      `json:"firstName"`
+	LName            string      `json:"lastName"`
+	PrimNum          string      `json:"primaryNumber"`
+	TmpBirthDay      string      `json:"birthDate"`
+	BirthDay         time.Time   // convert TmpBirthday to dt
+	Age              uint16      `json:"currentAge"`
+	BirthCity        string      `json:"birthCity"`
+	BirthState       string      `json:"birthStateProvince"`
+	BirthCountry     string      `json:"birthCountry"`
+	Height           string      `json:"height"`
+	Weight           uint16      `json:"weight"`
+	Active           bool        `json:"active"`
+	CurrentTeam      MLBObj      `json:"currentTeam"` // gets id and link, no team
+	PrimPos          MLBPosition `json:"primaryPosition"`
+	UseName          string      `json:"useName"`
+	UseLName         string      `json:"useLastName"`
+	MName            string      `json:"middleName"`
+	BoxScoreName     string      `json:"boxscoreName"`
+	Gender           string      `json:"gender"`
+	IsPlayer         bool        `json:"isPlayer"`
+	IsVerified       bool        `json:"isVerified"`
+	DraftYear        uint16      `json:"draftYear"`
+	TmpDebutDate     string      `json:"mlbDebutDate"`
+	DebutDate        time.Time   // convert debut date
+	BatSide          MLBAttr     `json:"batSide"`
+	PitchHand        MLBAttr     `json:"pitchHand"`
+	NameFL           string      `json:"nameFirstLast"`
+	NameSlug         string      `json:"nameSlug"`
+	FLName           string      `json:"firstLastName"`
+	LFName           string      `json:"lastFirstName"`
+	LIName           string      `json:"lastInitName"`
+	FMLName          string      `json:"fullFMLName"`
+	LMFName          string      `json:"fullLFMName"`
+	StrikeZoneTop    float64     `json:"strikeZoneTop"`
+	StrikeZoneBottom float64     `json:"strikeZoneBottom"`
 }
 
 type MLBPosition struct {
@@ -145,7 +185,14 @@ type MLBPosition struct {
 	Abbr string `json:"abbreviation"`
 }
 
-type MLBPersonStatus struct {
+// convert from MLBPersonStatus to more general MLBAttr
+type MLBAttr struct {
 	Code string `json:"code"`
 	Desc string `json:"description"`
+}
+
+// MLB PLAYERS /sports/1/players
+type RespPlayers struct {
+	Players []MLBPlayerDetail `json:"people"`
+	Season  string            // use to make playerseason id for db
 }

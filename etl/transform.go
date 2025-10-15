@@ -4,7 +4,11 @@ package etl
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 )
+
+// common date string
+const BASIC_DATE_STR string = "2006-01-02"
 
 // GENERIC JSON TO GO STRUCT UNMARSHALER
 // creates a variable of the desired type, attempts to unmarshal the passed js
@@ -25,4 +29,14 @@ func checkLen(str string) string {
 		return str
 	}
 	return ""
+}
+
+// convert passed string to time.Time in target based on layout
+func StrToDT(source *string, target *time.Time, layout string) error {
+	dt, err := time.Parse(layout, *source)
+	if err != nil {
+		return err
+	}
+	*target = dt
+	return nil
 }

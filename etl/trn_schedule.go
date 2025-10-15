@@ -50,10 +50,14 @@ func (rs *RespSchedule) SliceInsertRows() [][]any {
 }
 
 // convert all TmpDateTime to DateTime in schedule response
+// convert string TmpDateTime to time.Time DateTime
+// RFC3339 format: 2025-10-04T18:08:00Z
 func (rs *RespSchedule) CleanTempFields() error {
 	for _, d := range rs.Dates {
 		for _, g := range d.Games {
-			if err := g.toDateTime(); err != nil {
+			// if err := g.toDateTime(); err != nil {
+			err := StrToDT(&g.TmpDateTime, &g.DateTime, time.RFC3339)
+			if err != nil {
 				return err
 			}
 			if err := g.toFloats(); err != nil {
@@ -62,17 +66,6 @@ func (rs *RespSchedule) CleanTempFields() error {
 			// fmt.Println(g.TmpDateTime, "|||", g.DateTime)
 		}
 	}
-	return nil
-}
-
-// convert string TmpDateTime to time.Time DateTime
-// RFC3339 format: 2025-10-04T18:08:00Z
-func (g *MLBGame) toDateTime() error {
-	dt, err := time.Parse(time.RFC3339, g.TmpDateTime)
-	if err != nil {
-		return err
-	}
-	g.DateTime = dt
 	return nil
 }
 

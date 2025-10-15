@@ -1,11 +1,25 @@
 package etl
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/jdetok/golib/pgresd"
 	"github.com/jdetok/mlb-etl/etl"
 )
+
+func TestETL(t *testing.T) {
+	endpt := "v1/sports"
+	// sch := "intake"
+	// table := "person"
+	// pkey := "id"
+	params := []etl.Param{{Key: "1"}, {Key: "players"}}
+	ds, err := etl.GetAndMakeDS[etl.RespPlayers](endpt, params)
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Println(ds)
+}
 
 // test full etl process for schedule endpoint
 func TestScheduleETL(t *testing.T) {
@@ -46,7 +60,7 @@ func TestETLInterface(t *testing.T) {
 		"intake", "game_from_schedule", "id", "v1/schedule",
 		[]etl.Param{
 			{Key: "sportId", Val: "1"},
-			{Key: "season", Val: "1995"},
+			{Key: "season", Val: "2003"},
 			{Key: "gameType", Val: "R"},
 		},
 	)
@@ -64,11 +78,31 @@ func TestETLInterface(t *testing.T) {
 	}
 
 	// TODO: FINISH PLAYER ETL
-	pe := etl.MakeETL(&etl.RespPeople{},
+	pe := etl.MakeETL(&etl.RespRoster{},
 		"intake", "person", "id", "v1/teams", []etl.Param{{Key: "138"}, {Key: "roster"}})
 
 	if err := pe.RunFullETL(db); err != nil {
 		t.Error(err)
 	}
 
+}
+
+func TestPlayersETL(t *testing.T) {
+	var pl etl.RespPlayers
+	pl.Season = "2025"
+	ple := etl.MakeETL(
+		&pl,
+		"intake",
+		"players_season",
+		"plszn_id",
+		"v1/sports", // sports/1/players?season=2025
+		[]etl.Param{{Key: "1"}, {Key: "players"}, {Key: "season", Val: "2025"}})
+
+	ds, err := etl.GetAndMakeDS[etl.RespPlayers](ple.Request.Endpoint, ple.Request.Params)
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Println(ds.Players[0])
+	ple.Request.BuildURL()
+	fmt.Println(ple.Request.URL)
 }

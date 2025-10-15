@@ -57,23 +57,34 @@ will be appended to the url (preceded by a /) -> this looks like /v1/teams/158
 */
 func (gr *HTTPGet) BuildURL() {
 	var url string = fmt.Sprintf("%s/%s", gr.Base, gr.Endpoint)
-
+	var params []Param // edit params to iterate through when building q string
 	// build query string if there are parameters
 	lenP := len(gr.Params)
 	if lenP > 0 {
-		// HANDLE base/endpoint/value e.g. v1/teams/158
-		if lenP <= 2 && gr.Params[0].Val == "" { // either get this
-			url += fmt.Sprintf("/%s", gr.Params[0].Key)
-			if lenP == 2 && gr.Params[1].Val == "" { // for teams/158/roster
-				url += fmt.Sprintf("/%s", gr.Params[1].Key)
+		// handle url edge cases (anything but /api/items?key=val&key1=val1)
+		if gr.Params[0].Key != "" && gr.Params[0].Val == "" { // first value empty
+			if lenP == 1 {
+				url += fmt.Sprintf("/%s", gr.Params[0].Key)
+				gr.URL = url
+				return // return early if only one
+			} // for teams/158/roster
+			if gr.Params[1].Key != "" && gr.Params[1].Val == "" {
+				url += fmt.Sprintf("/%s/%s", gr.Params[0].Key, gr.Params[1].Key)
+				if lenP == 2 { // assign & return if only 2
+					gr.URL = url
+					return
+				} else { // make params only third item and on
+					params = gr.Params[2:]
+				}
 			}
-			gr.URL = url
-			return // return early if only one
+		} else { // first key val good
+			params = gr.Params
 		}
-		url += "?" // start query string
-		for i, p := range gr.Params {
+		// build query string
+		url += "?"
+		for i, p := range params {
 			url += fmt.Sprintf("%s=%s", p.Key, p.Val)
-			if i < (len(gr.Params) - 1) { // concat & if not last param
+			if i < (len(params) - 1) { // concat & if not last param
 				url += "&"
 			}
 		}
