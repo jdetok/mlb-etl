@@ -1,7 +1,6 @@
 package etl
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -13,15 +12,6 @@ func (rs *RespSchedule) SliceInsertRows() [][]any {
 	// vals in order of DB insert
 	for i := range rs.Dates {
 		for _, g := range rs.Dates[i].Games {
-
-			// CHECK SINGLE CHARACTER VARIABLES FOR LENGTH
-			var single_chars = []string{g.IfNecessary, g.DayType,
-				g.Status.AbstractCode, g.Status.StateCode, g.Status.Code, g.Type}
-			for i, v := range single_chars {
-				if str := checkLen(v); str != "" {
-					fmt.Printf("FIELD AT POSITION %d GREATER THAN 1 CHARACTER | %s\n", i+1, v)
-				}
-			}
 			var vals = []any{
 				g.GID, g.GUID, g.Type, g.Season, g.DateTime, g.DateStr,
 				// STATUS STRUCT

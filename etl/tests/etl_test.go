@@ -3,6 +3,7 @@ package etl
 import (
 	"fmt"
 	"strconv"
+	"sync"
 	"testing"
 
 	"github.com/jdetok/golib/pgresd"
@@ -55,29 +56,74 @@ func TestETLInterface(t *testing.T) {
 		t.Errorf("failed to connect to database | %v\n", err)
 	}
 
-	// SCHEDULE ENDPOINT TEST
-	// schema | table | primary key | endpoint | endpoint parameters
-	e := etl.MakeETL(&etl.RespSchedule{},
-		"intake", "game_from_schedule", "id", "v1/schedule",
-		[]etl.Param{
-			{Key: "sportId", Val: "1"},
-			{Key: "season", Val: "2003"},
-			{Key: "gameType", Val: "R"},
-		},
-	)
+	var startYr int = 1970
+	var endYr int = 2025
 
-	if err := e.RunFullETL(db); err != nil {
-		t.Error(err)
+	var rc int64 = 0
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+	for i := 0; i < endYr-startYr; i++ {
+		wg.Add(1)
+		go func(i int, rc *int64) {
+			defer wg.Done()
+			szn := strconv.Itoa(endYr - i)
+
+			// SCHEDULE ENDPOINT TEST
+			// schema | table | primary key | endpoint | endpoint parameters
+			e := etl.MakeETL(&etl.RespSchedule{},
+				"intake", "game_from_schedule", "id", "v1/schedule",
+				[]etl.Param{
+					{Key: "sportId", Val: "1"},
+					{Key: "season", Val: szn},
+					{Key: "gameType", Val: "R"},
+				},
+			)
+			if err := e.RunFullETL(db); err != nil {
+				t.Error(err)
+			}
+
+			fmt.Println("schedule rows:", e.RowCount)
+
+			mu.Lock()
+			*rc += e.RowCount
+			mu.Unlock()
+
+			var pl etl.RespPlayers
+			// sports/1/players?season=2025
+			pl.Season = szn
+			ple := etl.MakeETL(&pl, "intake", "splayer", "sprid", "v1/sports",
+				[]etl.Param{
+					{Key: "1"},
+					{Key: "players"},
+					{Key: "season", Val: pl.Season}})
+
+			if err := ple.RunFullETL(db); err != nil {
+				t.Error(err)
+			}
+
+			mu.Lock()
+			*rc += ple.RowCount
+			mu.Unlock()
+
+			fmt.Println("player rows:", ple.RowCount)
+			// TEAMS ETL
+			te := etl.MakeETL(&etl.RespTeams{},
+				"intake", "team_detail", "id", "v1/teams",
+				[]etl.Param{{Key: "season", Val: szn}})
+
+			if err := te.RunFullETL(db); err != nil {
+				t.Error(err)
+			}
+
+			mu.Lock()
+			*rc += te.RowCount
+			mu.Unlock()
+
+			fmt.Println("team rows:", te.RowCount)
+
+		}(i, &rc)
 	}
-
-	// TEAMS ETL
-	te := etl.MakeETL(&etl.RespTeams{},
-		"intake", "team_detail", "id", "v1/teams", []etl.Param{{}})
-
-	if err := te.RunFullETL(db); err != nil {
-		t.Error(err)
-	}
-
+	wg.Wait()
 	// TODO: FINISH PLAYER ETL
 	pe := etl.MakeETL(&etl.RespRoster{},
 		"intake", "person", "id", "v1/teams", []etl.Param{{Key: "138"}, {Key: "roster"}})
@@ -85,7 +131,9 @@ func TestETLInterface(t *testing.T) {
 	if err := pe.RunFullETL(db); err != nil {
 		t.Error(err)
 	}
+	rc += pe.RowCount
 
+	fmt.Println("FINAL COUNT: ", rc)
 }
 
 func TestPlayersETL(t *testing.T) {

@@ -68,7 +68,7 @@ func (e *ETL) ExtractData() error {
 	if err != nil {
 		return fmt.Errorf("** failed to send get request to %s\n%w", e.Request.URL, err)
 	}
-	fmt.Println(e.Request.URL)
+	// fmt.Println(e.Request.URL)
 	// fmt.Println(string(js))
 
 	// populate e.Dataset by unmarshalling json

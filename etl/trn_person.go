@@ -48,7 +48,7 @@ func (pl *RespPlayers) CleanTempFields() error {
 			`, pl.Players[i].ID, pl.Players[i].Name, pl.Season, prErr)
 		}
 		pl.Players[i].SPrID = *SPrID
-		fmt.Println(pl.Players[i].SPrID)
+		// fmt.Println(pl.Players[i].SPrID)
 
 		if ddErr != nil || bdErr != nil {
 			return fmt.Errorf(`
