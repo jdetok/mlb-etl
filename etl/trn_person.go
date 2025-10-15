@@ -1,6 +1,8 @@
 package etl
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // ROSTER ENDPOINT
 func (rp *RespRoster) CleanTempFields() error {
@@ -22,10 +24,32 @@ func (rp *RespRoster) SliceInsertRows() [][]any {
 
 // PLAYERS ENDPOINT
 func (pl *RespPlayers) CleanTempFields() error {
+	var ddErr, bdErr error
 	// convert debut date and birthdate to dt
-	for _, p := range pl.Players {
-		ddErr := StrToDT(&p.TmpDebutDate, &p.DebutDate, BASIC_DATE_STR)
-		bdErr := StrToDT(&p.TmpBirthDay, &p.BirthDay, BASIC_DATE_STR)
+	for i := range pl.Players {
+		if pl.Players[i].TmpDebutDate != "" {
+			ddErr = StrToDT(&pl.Players[i].TmpDebutDate,
+				&pl.Players[i].DebutDate, BASIC_DATE_STR)
+		}
+
+		if pl.Players[i].TmpBirthDay != "" {
+			bdErr = StrToDT(&pl.Players[i].TmpBirthDay, &pl.Players[i].BirthDay,
+				BASIC_DATE_STR)
+		}
+
+		SPrID, prErr := MakeSPrID(&pl.Players[i].ID, &pl.Season)
+		if prErr != nil {
+			// NEEDS TO BE LOGGED
+			fmt.Printf(`
+			** can't make player season primary key 
+			* player id: %d | name: %s | season: %s
+			** %v
+			*** CONTINUNG | TODO ADD THIS TO LOGGER 
+			`, pl.Players[i].ID, pl.Players[i].Name, pl.Season, prErr)
+		}
+		pl.Players[i].SPrID = *SPrID
+		fmt.Println(pl.Players[i].SPrID)
+
 		if ddErr != nil || bdErr != nil {
 			return fmt.Errorf(`
 			failed converting debut date OR birthdate to date time
@@ -42,8 +66,17 @@ func (pl *RespPlayers) CleanTempFields() error {
 func (pl *RespPlayers) SliceInsertRows() [][]any {
 	var rows [][]any
 	for _, p := range pl.Players {
+
 		var vals = []any{
-			p.ID, p.Name,
+			p.SPrID, p.ID, p.Name, p.Link, p.FName, p.LName, p.PrimNum,
+			p.BirthDay, p.Age, p.BirthCity, p.BirthState, p.BirthCountry,
+			p.Height, p.Weight, p.Active, p.CurrentTeam.ID, p.CurrentTeam.Link,
+			p.PrimPos.Code, p.PrimPos.Name, p.PrimPos.Type, p.PrimPos.Abbr,
+			p.UseName, p.UseLName, p.MName, p.BoxScoreName, p.Gender,
+			p.IsPlayer, p.IsVerified, p.DraftYear, p.DebutDate,
+			p.BatSide.Code, p.BatSide.Desc, p.PitchHand.Code, p.PitchHand.Desc,
+			p.NameFL, p.NameSlug, p.FLName, p.LFName, p.LIName,
+			p.FMLName, p.LFName, p.StrikeZoneTop, p.StrikeZoneBottom,
 		}
 		rows = append(rows, vals)
 	}

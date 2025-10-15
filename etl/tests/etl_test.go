@@ -2,6 +2,7 @@ package etl
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/jdetok/golib/pgresd"
@@ -88,21 +89,34 @@ func TestETLInterface(t *testing.T) {
 }
 
 func TestPlayersETL(t *testing.T) {
-	var pl etl.RespPlayers
-	pl.Season = "2025"
-	ple := etl.MakeETL(
-		&pl,
-		"intake",
-		"players_season",
-		"plszn_id",
-		"v1/sports", // sports/1/players?season=2025
-		[]etl.Param{{Key: "1"}, {Key: "players"}, {Key: "season", Val: "2025"}})
-
-	ds, err := etl.GetAndMakeDS[etl.RespPlayers](ple.Request.Endpoint, ple.Request.Params)
+	db, err := pgresd.ConnectTestDB("../../.env")
 	if err != nil {
-		t.Error(err)
+		t.Errorf("failed to connect to database | %v\n", err)
 	}
-	fmt.Println(ds.Players[0])
-	ple.Request.BuildURL()
-	fmt.Println(ple.Request.URL)
+	// pass already made struct to record season
+	// enables prsid primary key
+
+	var startYr int = 2004
+	var endYr int = 2025
+	// var dir int = 1
+
+	for i := range endYr - startYr {
+		// sznStr := strconv.Itoa(endYr - i)
+		// direction by whivh is bigger
+		var pl etl.RespPlayers
+		pl.Season = strconv.Itoa(endYr - i)
+		ple := etl.MakeETL(
+			&pl,
+			"intake",
+			"splayer",
+			"sprid",
+			"v1/sports", // sports/1/players?season=2025
+			[]etl.Param{{Key: "1"}, {Key: "players"}, {Key: "season", Val: pl.Season}})
+
+		if err := ple.RunFullETL(db); err != nil {
+			t.Error(err)
+		}
+		// fmt.Println(pl.Players)
+		fmt.Println(pl.Players[0].SPrID)
+	}
 }

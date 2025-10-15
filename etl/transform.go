@@ -4,6 +4,7 @@ package etl
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 )
 
@@ -33,10 +34,32 @@ func checkLen(str string) string {
 
 // convert passed string to time.Time in target based on layout
 func StrToDT(source *string, target *time.Time, layout string) error {
+	if *source == "" {
+		return fmt.Errorf("ERROR | cannot convert empty string")
+	}
 	dt, err := time.Parse(layout, *source)
 	if err != nil {
 		return err
 	}
 	*target = dt
 	return nil
+}
+
+// concat season and person id to make player/season primary key field
+func MakeSPrID(prId *uint64, season *string) (*uint64, error) {
+	// first check that season is a valid integer
+	if _, err := strconv.Atoi(*season); err != nil {
+		return nil, fmt.Errorf(`SPrID generation failed | season <%s> must be an int | %w`,
+			*season, err)
+	}
+	// player id as string
+	prIdStr := strconv.FormatUint(*prId, 10)
+	SPrIDStr := *season + prIdStr // concat ids as strings
+	SPrIDUint, err := strconv.ParseUint(SPrIDStr, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf(`failed | generated <%s> could not be converted to uint64 | %w`,
+			SPrIDStr, err)
+	}
+	// assign the uint64 to the original reference
+	return &SPrIDUint, nil
 }
