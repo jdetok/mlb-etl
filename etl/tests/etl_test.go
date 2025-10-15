@@ -103,20 +103,23 @@ func TestPlayersETL(t *testing.T) {
 	for i := range endYr - startYr {
 		// sznStr := strconv.Itoa(endYr - i)
 		// direction by whivh is bigger
-		var pl etl.RespPlayers
-		pl.Season = strconv.Itoa(endYr - i)
-		ple := etl.MakeETL(
-			&pl,
-			"intake",
-			"splayer",
-			"sprid",
-			"v1/sports", // sports/1/players?season=2025
-			[]etl.Param{{Key: "1"}, {Key: "players"}, {Key: "season", Val: pl.Season}})
+		go func() {
+			var pl etl.RespPlayers
+			pl.Season = strconv.Itoa(endYr - i)
+			ple := etl.MakeETL(
+				&pl,
+				"intake",
+				"splayer",
+				"sprid",
+				"v1/sports", // sports/1/players?season=2025
+				[]etl.Param{{Key: "1"}, {Key: "players"}, {Key: "season", Val: pl.Season}})
 
-		if err := ple.RunFullETL(db); err != nil {
-			t.Error(err)
-		}
-		// fmt.Println(pl.Players)
-		fmt.Println(pl.Players[0].SPrID)
+			if err := ple.RunFullETL(db); err != nil {
+				t.Error(err)
+			}
+
+			// fmt.Println(pl.Players)
+			fmt.Println(pl.Players[0].SPrID)
+		}()
 	}
 }
