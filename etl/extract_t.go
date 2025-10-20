@@ -138,7 +138,8 @@ type MLBPerson struct {
 // use this for most of /sports/player general stats, also can be used
 // for only id fullname link
 type MLBPlayerDetail struct {
-	SPrID            uint64      // primary key, personidseasonid
+	SPrID            uint64 // primary key, personidseasonid
+	Season           string
 	ID               uint64      `json:"id"`
 	Name             string      `json:"fullName"`
 	Link             string      `json:"link"`

@@ -27,16 +27,19 @@ func (pl *RespPlayers) CleanTempFields() error {
 	var ddErr, bdErr error
 	// convert debut date and birthdate to dt
 	for i := range pl.Players {
+		// convert debut date to date time
 		if pl.Players[i].TmpDebutDate != "" {
 			ddErr = StrToDT(&pl.Players[i].TmpDebutDate,
 				&pl.Players[i].DebutDate, BASIC_DATE_STR)
 		}
 
+		// convert birthday to date time
 		if pl.Players[i].TmpBirthDay != "" {
 			bdErr = StrToDT(&pl.Players[i].TmpBirthDay, &pl.Players[i].BirthDay,
 				BASIC_DATE_STR)
 		}
 
+		// make player sprid (season+playerid)
 		SPrID, prErr := MakeSPrID(&pl.Players[i].ID, &pl.Season)
 		if prErr != nil {
 			// NEEDS TO BE LOGGED
@@ -48,7 +51,9 @@ func (pl *RespPlayers) CleanTempFields() error {
 			`, pl.Players[i].ID, pl.Players[i].Name, pl.Season, prErr)
 		}
 		pl.Players[i].SPrID = *SPrID
-		// fmt.Println(pl.Players[i].SPrID)
+
+		// assign pl.season to individual players
+		pl.Players[i].Season = pl.Season
 
 		if ddErr != nil || bdErr != nil {
 			return fmt.Errorf(`
@@ -68,7 +73,7 @@ func (pl *RespPlayers) SliceInsertRows() [][]any {
 	for _, p := range pl.Players {
 
 		var vals = []any{
-			p.SPrID, p.ID, p.Name, p.Link, p.FName, p.LName, p.PrimNum,
+			p.SPrID, p.Season, p.ID, p.Name, p.Link, p.FName, p.LName, p.PrimNum,
 			p.BirthDay, p.Age, p.BirthCity, p.BirthState, p.BirthCountry,
 			p.Height, p.Weight, p.Active, p.CurrentTeam.ID, p.CurrentTeam.Link,
 			p.PrimPos.Code, p.PrimPos.Name, p.PrimPos.Type, p.PrimPos.Abbr,

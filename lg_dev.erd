@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<diagram version="1" name="lg_dev.erd">
+	<entities>
+		<data-source id="postgres-jdbc-199d90f3e06-715efa413b061326">
+			<entity id="1" name="dvdtl" fq-name="lg.dvdtl" order="0" x="236" y="37">
+				<path name="lg"/>
+				<path name="mlb"/>
+			</entity>
+			<entity id="2" name="lgdtl" fq-name="lg.lgdtl" order="1" x="98" y="48">
+				<path name="lg"/>
+				<path name="mlb"/>
+			</entity>
+			<entity id="3" name="plrdtl" fq-name="lg.plrdtl" order="2" x="526" y="355">
+				<path name="lg"/>
+				<path name="mlb"/>
+			</entity>
+			<entity id="4" name="szndtl" fq-name="lg.szndtl" order="3" x="540" y="26">
+				<path name="lg"/>
+				<path name="mlb"/>
+			</entity>
+			<entity id="5" name="tmdtl" fq-name="lg.tmdtl" order="4" x="367" y="34">
+				<path name="lg"/>
+				<path name="mlb"/>
+			</entity>
+			<entity id="6" name="tmroster" fq-name="lg.tmroster" order="5" x="333" y="245">
+				<path name="lg"/>
+				<path name="mlb"/>
+			</entity>
+			<entity id="7" name="tmszn" fq-name="lg.tmszn" order="6" x="84" y="238">
+				<path name="lg"/>
+				<path name="mlb"/>
+			</entity>
+		</data-source>
+	</entities>
+	<relations>
+		<relation name="tmroster_dvid_fkey" fq-name="lg.tmroster.tmroster_dvid_fkey" type="fk" pk-ref="1" fk-ref="6"/>
+		<relation name="tmszn_dvid_fkey" fq-name="lg.tmszn.tmszn_dvid_fkey" type="fk" pk-ref="1" fk-ref="7"/>
+		<relation name="dvdtl_lgid_fkey" fq-name="lg.dvdtl.dvdtl_lgid_fkey" type="fk" pk-ref="2" fk-ref="1"/>
+		<relation name="tmroster_lgid_fkey" fq-name="lg.tmroster.tmroster_lgid_fkey" type="fk" pk-ref="2" fk-ref="6"/>
+		<relation name="tmszn_lgid_fkey" fq-name="lg.tmszn.tmszn_lgid_fkey" type="fk" pk-ref="2" fk-ref="7"/>
+		<relation name="tmroster_plrid_fkey" fq-name="lg.tmroster.tmroster_plrid_fkey" type="fk" pk-ref="3" fk-ref="6"/>
+		<relation name="tmroster_sznid_fkey" fq-name="lg.tmroster.tmroster_sznid_fkey" type="fk" pk-ref="4" fk-ref="6"/>
+		<relation name="tmszn_sznid_fkey" fq-name="lg.tmszn.tmszn_sznid_fkey" type="fk" pk-ref="4" fk-ref="7"/>
+		<relation name="tmroster_teamid_fkey" fq-name="lg.tmroster.tmroster_teamid_fkey" type="fk" pk-ref="5" fk-ref="6"/>
+		<relation name="tmszn_teamid_fkey" fq-name="lg.tmszn.tmszn_teamid_fkey" type="fk" pk-ref="5" fk-ref="7"/>
+	</relations>
+</diagram>

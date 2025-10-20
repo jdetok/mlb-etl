@@ -118,6 +118,7 @@ create table if not exists intake.person (
 -- splayer for season player
 create table if not exists intake.splayer (
     sprid bigint primary key,
+    season varchar(4),
     id integer,
     name varchar(255),
     api_link varchar(255),
