@@ -1,6 +1,17 @@
 -- INTAKE TABLES CREATION FOR MLB POSTGRES DB - 10/12/2025
 -- these tables should accept the data fetched directly from the MLB API
 
+create table if not exists log.log (
+    logid uuid primary key default gen_random_uuid(),
+    prj varchar(255),
+    msg text,
+    ltime timestamptz,
+    ltstr varchar(20),
+    caller varchar(255),
+    err text,
+    rc bigint
+);
+
 -- FROM SCHEDULE ENDPOINT
 create table if not exists intake.game_from_schedule (
     id integer primary key,

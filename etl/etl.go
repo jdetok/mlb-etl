@@ -12,15 +12,17 @@ import (
 	"reflect"
 
 	"github.com/jdetok/golib/pgresd"
+	"github.com/jdetok/mlb-etl/logd"
 )
 
 // get ETL struct
 // ETLProcess interface implementation // db target info, endpoint info passed
-func MakeETL(ds ETLProcess, sch, tbl, pkey, endpt string, params []Param) *ETL {
+func MakeETL(ds ETLProcess, sch, tbl, pkey, endpt string, params []Param, lg *logd.Logder) *ETL {
 	gr := HTTPGet{
 		Base:     BASE,
 		Endpoint: endpt,
 		Params:   params,
+		Log:      lg,
 	}
 
 	e := ETL{
@@ -30,6 +32,7 @@ func MakeETL(ds ETLProcess, sch, tbl, pkey, endpt string, params []Param) *ETL {
 		PgTable:  tbl,
 		PgPKey:   pkey,
 		RowCount: 0,
+		Log:      lg,
 	}
 	return &e
 }
@@ -37,19 +40,20 @@ func MakeETL(ds ETLProcess, sch, tbl, pkey, endpt string, params []Param) *ETL {
 // run entire ETL processes
 func (e *ETL) RunFullETL(db *sql.DB) error {
 	if err := e.ExtractData(); err != nil {
-		return fmt.Errorf("** error extracting data from %s\n%w", e.Request.URL, err)
+		e.Log.Log(fmt.Sprintf("** error extracting data from %s", e.Request.URL), err, 0)
+		return err
 	}
 
 	// call the appropriate struct method from the interface
 	if err := e.Dataset.CleanTempFields(); err != nil {
-		return fmt.Errorf(
-			"** error cleaning fields for ETLProcess implementation struct\n%w", err)
+		e.Log.Log("** error cleaning fields for ETLProcess implementation struct", err, 0)
+		return err
 	}
 
 	cols, err := pgresd.ColumnsInTable(db, e.PgTable)
 	if err != nil {
-		return fmt.Errorf(
-			"** error making slice of columns\n%w", err)
+		e.Log.Log("** error making slice of columns", err, 0)
+		return err
 	}
 
 	rows := e.Dataset.SliceInsertRows()

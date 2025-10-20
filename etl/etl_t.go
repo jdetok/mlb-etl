@@ -1,6 +1,9 @@
 package etl
 
-import "github.com/jdetok/golib/pgresd"
+import (
+	"github.com/jdetok/golib/pgresd"
+	"github.com/jdetok/mlb-etl/logd"
+)
 
 // MLB stats api base url
 const BASE string = "https://statsapi.mlb.com/api"
@@ -22,4 +25,5 @@ type ETL struct {
 	PgPKey   string             // primary key of db table
 	InSt     pgresd.InsertStmnt // insert statement struct from postgres library
 	RowCount int64              // row count for postgres insert
+	Log      *logd.Logder
 }

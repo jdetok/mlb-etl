@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/jdetok/mlb-etl/logd"
 )
 
 // get request struct
@@ -17,6 +19,7 @@ type HTTPGet struct {
 	Endpoint string
 	Params   []Param
 	URL      string // call BuildURL
+	Log      *logd.Logder
 }
 
 // parameters for query string

@@ -9,6 +9,7 @@ import (
 
 	"github.com/jdetok/golib/pgresd"
 	"github.com/jdetok/mlb-etl/etl"
+	"github.com/jdetok/mlb-etl/logd"
 )
 
 // super quick error handling for testing, replace later
@@ -18,14 +19,16 @@ func ErrHndl(err error) {
 }
 
 func main() {
+	lg := logd.Logder{Prj: "mlb-etl"}
+	lg.Log("starting", nil, 0)
 	db, err := pgresd.ConnectDB()
 	if err != nil {
-		ErrHndl(err)
+		lg.Log("couldn't connect to db", err, 0)
 	}
-	db.SetMaxOpenConns(200)
+	db.SetMaxOpenConns(500)
 	db.SetMaxIdleConns(50)
-
-	var startYr int = 1970
+	lg.DB = db
+	var startYr int = 1950
 	var endYr int = 2025
 	var rc int64 = 0
 	var mu sync.Mutex
@@ -44,13 +47,13 @@ func main() {
 					{Key: "sportId", Val: "1"},
 					{Key: "season", Val: szn},
 					{Key: "gameType", Val: "R"},
-				},
+				}, &lg,
 			)
 			if err := e.RunFullETL(db); err != nil {
-				fmt.Println(err)
+				lg.Log("schedule endpoint failed", err, *rc)
 			}
 
-			fmt.Println("schedule rows:", e.RowCount)
+			// fmt.Println("schedule rows:", e.RowCount)
 
 			mu.Lock()
 			*rc += e.RowCount
@@ -63,43 +66,52 @@ func main() {
 				[]etl.Param{
 					{Key: "1"},
 					{Key: "players"},
-					{Key: "season", Val: pl.Season}})
+					{Key: "season", Val: pl.Season}}, &lg)
 
 			if err := ple.RunFullETL(db); err != nil {
-				fmt.Println(err)
+				lg.Log("error with players endpoint", err, *rc)
+				// fmt.Println(err)
 			}
+
+			lg.Log(fmt.Sprintf("done with players etl for %s", pl.Season), nil, *rc)
 
 			mu.Lock()
 			*rc += ple.RowCount
 			mu.Unlock()
 
-			fmt.Println("player rows:", ple.RowCount)
+			// fmt.Println("player rows:", ple.RowCount)
 			// TEAMS ETL
 			te := etl.MakeETL(&etl.RespTeams{},
 				"intake", "team_detail", "id", "v1/teams",
-				[]etl.Param{{Key: "season", Val: szn}})
+				[]etl.Param{{Key: "season", Val: szn}}, &lg)
 
 			if err := te.RunFullETL(db); err != nil {
-				fmt.Println(err)
+				// fmt.Println(err)
+				lg.Log("error with teams endpoint", err, *rc)
 			}
+
+			lg.Log(fmt.Sprintf("done with teams etl for %s", szn), nil, *rc)
 
 			mu.Lock()
 			*rc += te.RowCount
 			mu.Unlock()
 
-			fmt.Println("team rows:", te.RowCount)
+			// fmt.Println("team rows:", te.RowCount)
 
 		}(i, &rc)
 	}
 	wg.Wait()
 	// TODO: FINISH PLAYER ETL
 	pe := etl.MakeETL(&etl.RespRoster{},
-		"intake", "person", "id", "v1/teams", []etl.Param{{Key: "138"}, {Key: "roster"}})
+		"intake", "person", "id", "v1/teams",
+		[]etl.Param{{Key: "138"}, {Key: "roster"}}, &lg)
 
 	if err := pe.RunFullETL(db); err != nil {
-		fmt.Println(err)
+		// fmt.Println(err)
+		lg.Log("error with roster endpoint", err, rc)
 	}
 	rc += pe.RowCount
 
-	fmt.Println("FINAL COUNT: ", rc)
+	lg.Log(fmt.Sprintf("FINAL ROW COUNT: %d", rc), nil, rc)
+	// fmt.Println("FINAL COUNT: ", rc)
 }

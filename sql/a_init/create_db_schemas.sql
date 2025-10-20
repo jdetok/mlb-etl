@@ -1,3 +1,6 @@
+-- for logging inserts
+create schema log;
+
 -- tables to insert the data from MLB stats API
 create schema intake;
 

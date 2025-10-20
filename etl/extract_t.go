@@ -147,7 +147,7 @@ type MLBPlayerDetail struct {
 	PrimNum          string      `json:"primaryNumber"`
 	TmpBirthDay      string      `json:"birthDate"`
 	BirthDay         time.Time   // convert TmpBirthday to dt
-	Age              uint16      `json:"currentAge"`
+	Age              int16       `json:"currentAge"`
 	BirthCity        string      `json:"birthCity"`
 	BirthState       string      `json:"birthStateProvince"`
 	BirthCountry     string      `json:"birthCountry"`
