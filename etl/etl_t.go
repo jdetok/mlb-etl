@@ -27,3 +27,12 @@ type ETL struct {
 	RowCount int64              // row count for postgres insert
 	Log      *logd.Logder
 }
+
+// parameters for RunManySznETL
+type BatchETL struct {
+	StartSzn  int
+	EndSzn    int
+	MaxGoRtns int
+	RowCount  int64
+	TotalRC   *int64 // global row count defined in main
+}

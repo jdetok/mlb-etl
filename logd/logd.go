@@ -28,12 +28,26 @@ type Logd struct {
 	RowCount int64
 }
 
-func (lg *Logder) Log(msg string, err error, rc int64) {
-	l := Logd{Msg: msg, Err: err, LogTime: time.Now()}
+func (lg *Logder) Log(msg string, err error, rc *int64) {
+	var row_count int64
+	if rc == nil {
+		row_count = 0
+	} else {
+		row_count = *rc
+	}
+	l := Logd{Msg: msg, Err: err, LogTime: time.Now(), RowCount: row_count}
 	l.SetCaller()
 	l.FormatTime()
 	lg.Logs = append(lg.Logs, l)
 	l.WriteLog()
+	if rc != nil {
+		if lg.DB != nil {
+			lg.LogToDB(&l)
+		}
+	}
+}
+
+func (lg *Logder) LogToDB(l *Logd) {
 	if lg.DB != nil {
 		lg.DB.Exec(
 			`insert into log.log (prj, msg, ltime, ltstr, caller, err, rc) values
