@@ -29,7 +29,7 @@ func main() {
 	db.SetMaxIdleConns(200)
 	lg.DB = db
 
-	start := 2000
+	start := 1930
 	end := 2025
 
 	// max number of goroutines

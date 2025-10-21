@@ -71,6 +71,12 @@ func IncrementRC(mu *sync.Mutex, total_rc, rc_to_add *int64) {
 	mu.Unlock()
 }
 
+func CatchErr(mu *sync.Mutex, errs *[]error, err *error) {
+	mu.Lock()
+	*errs = append(*errs, *err)
+	mu.Unlock()
+}
+
 // concurrent etl runs many seasons
 func (b *BatchETL) RunManySznETL(db *sql.DB, lg *logd.Logder) error {
 
@@ -78,10 +84,6 @@ func (b *BatchETL) RunManySznETL(db *sql.DB, lg *logd.Logder) error {
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 
-	// global row count
-
-	// only allow maxcon goroutines at once (semaphore)
-	// maxcon := 10
 	sem := make(chan struct{}, b.MaxGoRtns)
 
 	// COLLECT ERRS
@@ -109,11 +111,10 @@ func (b *BatchETL) RunManySznETL(db *sql.DB, lg *logd.Logder) error {
 			)
 			if err := e.RunFullETL(db); err != nil {
 				lg.Log("schedule endpoint failed", err, rc)
-				errMu.Lock()
-				allErrs = append(allErrs, err)
-				errMu.Unlock()
+				CatchErr(&errMu, &allErrs, &err)
 			}
 
+			lg.Log(fmt.Sprintf("done with schedule etl for %s", szn), nil, &e.RowCount)
 			IncrementRC(&mu, rc, &e.RowCount)
 
 			var pl RespPlayers
@@ -127,12 +128,10 @@ func (b *BatchETL) RunManySznETL(db *sql.DB, lg *logd.Logder) error {
 
 			if err := ple.RunFullETL(db); err != nil {
 				lg.Log("error with players endpoint", err, rc)
-				errMu.Lock()
-				allErrs = append(allErrs, err)
-				errMu.Unlock()
+				CatchErr(&errMu, &allErrs, &err)
 			}
 
-			lg.Log(fmt.Sprintf("done with players etl for %s", pl.Season), nil, rc)
+			lg.Log(fmt.Sprintf("done with players etl for %s", pl.Season), nil, &ple.RowCount)
 
 			IncrementRC(&mu, rc, &ple.RowCount)
 
@@ -143,10 +142,7 @@ func (b *BatchETL) RunManySznETL(db *sql.DB, lg *logd.Logder) error {
 
 			if err := te.RunFullETL(db); err != nil {
 				lg.Log("error with teams endpoint", err, rc)
-				errMu.Lock()
-				allErrs = append(allErrs, err)
-				errMu.Unlock()
-
+				CatchErr(&errMu, &allErrs, &err)
 			}
 
 			lg.Log(fmt.Sprintf("done with teams etl for %s", szn), nil, rc)
@@ -179,8 +175,6 @@ func (e *ETL) ExtractData() error {
 	if err != nil {
 		return fmt.Errorf("** failed to send get request to %s\n%w", e.Request.URL, err)
 	}
-	// fmt.Println(e.Request.URL)
-	// fmt.Println(string(js))
 
 	// populate e.Dataset by unmarshalling json
 	if err := e.ConvertJSONResp(js); err != nil {
@@ -221,11 +215,4 @@ func GetAndMakeDS[T any](endpt string, params []Param) (*T, error) {
 		return nil, err
 	}
 	return ds, nil
-}
-
-// try to rewrite InsertGames (load.go) as a generic using the ETL struct
-// interface?? so i can do each structs own methods?
-func (e *ETL) InsertIntoDB() error {
-
-	return nil
 }
