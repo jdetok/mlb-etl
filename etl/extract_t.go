@@ -202,7 +202,9 @@ type RespPlayers struct {
 // box score stats for a specific game
 // game/gameId/boxscore
 type RespBoxscore struct {
-	Teams MLBBoxScoreTeams `json:"teams"`
+	Teams  MLBBoxScoreTeams `json:"teams"`
+	GameID uint64
+	Season string
 }
 
 type MLBBoxScoreTeams struct {
@@ -254,6 +256,10 @@ type MLBBattingStats struct {
 	IntnWalks      uint16 `json:"intentionalWalks"`
 	Hits           uint16 `json:"hits"`
 	HitByPitch     uint16 `json:"hitByPitch"`
+	Avg            string `json:"avg"`
+	OBP            string `json:"obp"`
+	SLG            string `json:"slg"`
+	OPS            string `json:"ops"`
 	AtBats         uint16 `json:"atBats"`
 	CaughtStealing uint16 `json:"caughtStealing"`
 	StolenBases    uint16 `json:"stolenBases"`
@@ -273,35 +279,35 @@ type MLBBattingStats struct {
 }
 
 type MLBPitchingStats struct {
-	MLBBattingStats          // a bunch of duplicate fields in the batting struct
-	GamesStarted      uint16 `json:"gamesStarted"`
-	NumPitches        uint16 `json:"numberOfPitches"`
-	InningsPitched    uint16 `json:"inningsPitched"`
-	Wins              uint16 `json:"wins"`
-	Losses            uint16 `json:"losses"`
-	Saves             uint16 `json:"saves"`
-	SaveOpps          uint16 `json:"saveOpportunities"`
-	Holds             uint16 `json:"holds"`
-	BlownSaves        uint16 `json:"blownSaves"`
-	EarnedRuns        uint16 `json:"earnedRuns"`
-	BattersFaced      uint16 `json:"battersFaced"`
-	Outs              uint16 `json:"outs"`
-	GamesPitched      uint16 `json:"gamesPitched"`
-	CompleteGames     uint16 `json:"completeGames"`
-	Shutouts          uint16 `json:"shutouts"`
-	PitchesThrown     uint16 `json:"pitchesThrown"`
-	Balls             uint16 `json:"balls"`
-	Strikes           uint16 `json:"strikes"`
-	StrikePct         string `json:"strikePercentage"`
-	HitBatsmen        uint16 `json:"hitBatsmen"`
-	Balks             uint16 `json:"balks"`
-	WildPitches       uint16 `json:"wildPitches"`
-	GamesFinished     uint16 `json:"gamesFinished"`
-	RunsPer9          string `json:"runsScoredPer9"`
-	HRPer9            string `json:"homeRunsPer9"`
-	InhrRunners       uint16 `json:"inheritedRunners"`
-	InhrRunnersScored uint16 `json:"inheritedRunnersScored"`
-	PassedBall        uint16 `json:"passedBall"`
+	BattingFields     MLBBattingStats // a bunch of duplicate fields in the batting struct
+	GamesStarted      uint16          `json:"gamesStarted"`
+	NumPitches        uint16          `json:"numberOfPitches"`
+	InningsPitched    uint16          `json:"inningsPitched"`
+	Wins              uint16          `json:"wins"`
+	Losses            uint16          `json:"losses"`
+	Saves             uint16          `json:"saves"`
+	SaveOpps          uint16          `json:"saveOpportunities"`
+	Holds             uint16          `json:"holds"`
+	BlownSaves        uint16          `json:"blownSaves"`
+	EarnedRuns        uint16          `json:"earnedRuns"`
+	BattersFaced      uint16          `json:"battersFaced"`
+	Outs              uint16          `json:"outs"`
+	GamesPitched      uint16          `json:"gamesPitched"`
+	CompleteGames     uint16          `json:"completeGames"`
+	Shutouts          uint16          `json:"shutouts"`
+	PitchesThrown     uint16          `json:"pitchesThrown"`
+	Balls             uint16          `json:"balls"`
+	Strikes           uint16          `json:"strikes"`
+	StrikePct         string          `json:"strikePercentage"`
+	HitBatsmen        uint16          `json:"hitBatsmen"`
+	Balks             uint16          `json:"balks"`
+	WildPitches       uint16          `json:"wildPitches"`
+	GamesFinished     uint16          `json:"gamesFinished"`
+	RunsPer9          string          `json:"runsScoredPer9"`
+	HRPer9            string          `json:"homeRunsPer9"`
+	InhrRunners       uint16          `json:"inheritedRunners"`
+	InhrRunnersScored uint16          `json:"inheritedRunnersScored"`
+	PassedBall        uint16          `json:"passedBall"`
 }
 
 type MLBFieldingStats struct {
