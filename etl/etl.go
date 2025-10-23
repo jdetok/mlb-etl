@@ -15,6 +15,7 @@ import (
 
 	"github.com/jdetok/mlb-etl/logd"
 	"github.com/jdetok/mlb-etl/pgresd"
+	"github.com/jdetok/mlb-etl/syncd"
 )
 
 // get ETL struct
@@ -84,18 +85,6 @@ func (e *ETL) RunFullETL(db *sql.DB) error {
 	return e.InSt.InsertFast(db, &e.RowCount)
 }
 
-func IncrementRC(mu *sync.Mutex, total_rc, rc_to_add *int64) {
-	mu.Lock()
-	*total_rc += *rc_to_add
-	mu.Unlock()
-}
-
-func CatchErr(mu *sync.Mutex, errs *[]error, err *error) {
-	mu.Lock()
-	*errs = append(*errs, *err)
-	mu.Unlock()
-}
-
 // concurrent etl runs many seasons
 func (b *BatchETL) RunManySznETL(db *sql.DB, lg *logd.Logder) error {
 
@@ -121,7 +110,7 @@ func (b *BatchETL) RunManySznETL(db *sql.DB, lg *logd.Logder) error {
 			// SCHEDULE ENDPOINT TEST
 			// schema | table | primary key | endpoint | endpoint parameters
 			e := MakeETL(&RespSchedule{},
-				"intake", "game_from_schedule", "id", "v1/schedule",
+				"intake", "game_from_schedule", "gameid", "v1/schedule",
 				[]Param{
 					{Key: "sportId", Val: "1"},
 					{Key: "season", Val: szn},
@@ -130,11 +119,11 @@ func (b *BatchETL) RunManySznETL(db *sql.DB, lg *logd.Logder) error {
 			)
 			if err := e.RunFullETL(db); err != nil {
 				lg.Log("schedule endpoint failed", err, rc)
-				CatchErr(&errMu, &allErrs, &err)
+				syncd.CatchErr(&errMu, &allErrs, &err)
 			}
 
 			lg.Log(fmt.Sprintf("done with schedule etl for %s", szn), nil, &e.RowCount)
-			IncrementRC(&mu, rc, &e.RowCount)
+			syncd.IncrementRC(&mu, rc, &e.RowCount)
 
 			var pl RespPlayers
 			// sports/1/players?season=2025
@@ -147,26 +136,26 @@ func (b *BatchETL) RunManySznETL(db *sql.DB, lg *logd.Logder) error {
 
 			if err := ple.RunFullETL(db); err != nil {
 				lg.Log("error with players endpoint", err, rc)
-				CatchErr(&errMu, &allErrs, &err)
+				syncd.CatchErr(&errMu, &allErrs, &err)
 			}
 
 			lg.Log(fmt.Sprintf("done with players etl for %s", pl.Season), nil, &ple.RowCount)
 
-			IncrementRC(&mu, rc, &ple.RowCount)
+			syncd.IncrementRC(&mu, rc, &ple.RowCount)
 
 			// TEAMS ETL
 			te := MakeETL(&RespTeams{},
-				"intake", "team_detail", "id", "v1/teams",
+				"intake", "team_detail", "teamid", "v1/teams",
 				[]Param{{Key: "season", Val: szn}}, lg)
 
 			if err := te.RunFullETL(db); err != nil {
 				lg.Log("error with teams endpoint", err, rc)
-				CatchErr(&errMu, &allErrs, &err)
+				syncd.CatchErr(&errMu, &allErrs, &err)
 			}
 
 			lg.Log(fmt.Sprintf("done with teams etl for %s", szn), nil, rc)
 
-			IncrementRC(&mu, rc, &te.RowCount)
+			syncd.IncrementRC(&mu, rc, &te.RowCount)
 		}(i, &b.RowCount)
 	}
 	wg.Wait()

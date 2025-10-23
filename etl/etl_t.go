@@ -42,4 +42,5 @@ type BatchETL struct {
 	MaxGoRtns int
 	RowCount  int64
 	TotalRC   *int64 // global row count defined in main
+	GameIDs   []uint64
 }

@@ -14,7 +14,7 @@ create table if not exists log.log (
 
 -- FROM SCHEDULE ENDPOINT
 create table if not exists intake.game_from_schedule (
-    id integer primary key,
+    gameid integer primary key,
     guid uuid,
     gtype char(1),
     season char(4),
