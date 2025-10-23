@@ -31,8 +31,8 @@ func TestMultiTblETL(t *testing.T) {
 	// fmt.Println(metl.Dataset.SliceInsertRows())
 	fmt.Println(len(metl.Dataset.SliceInsertRows()))
 	tableSets := metl.Dataset.SliceInsertRows()[0]
-	for _, ts := range tableSets {
-		fmt.Printf("ts: %v\n++++++++++++\n\n", ts)
+	for i, ts := range tableSets {
+		fmt.Printf("%v: %v\n++++++++++++\n\n", metl.PGTargets[i], ts)
 	}
 	// for _, p := range rows[0][1].([][]any) {
 	// 	for _, val := range p {
