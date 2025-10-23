@@ -265,6 +265,7 @@ type MLBBattingStats struct {
 	StolenBases    uint16 `json:"stolenBases"`
 	StolenBasesPct string `json:"stolenBasePercentage"`
 	GndIntoDP      uint16 `json:"groundIntoDoublePlay"`
+	GndIntoTP      uint16 `json:"groundIntoTriplePlay"`
 	PlateApps      uint16 `json:"plateAppearances"`
 	TotalBases     uint16 `json:"totalBases"`
 	RBI            uint16 `json:"rbi"`
@@ -280,9 +281,16 @@ type MLBBattingStats struct {
 
 type MLBPitchingStats struct {
 	BattingFields     MLBBattingStats // a bunch of duplicate fields in the batting struct
+	CaughtStealingPct string          `json:"caughtStealingPercentage"`
+	ERA               string          `json:"era"`
+	Whip              string          `json:"whip"`
+	GndToAir          string          `json:"groundOutsToAirouts"`
+	PitchPerInning    string          `json:"pitchesPerInning"`
 	GamesStarted      uint16          `json:"gamesStarted"`
 	NumPitches        uint16          `json:"numberOfPitches"`
-	InningsPitched    uint16          `json:"inningsPitched"`
+	InningsPitched    string          `json:"inningsPitched"`
+	WinPct            string          `json:"winPercentage"`
+	SOWalkRatio       string          `json:"strikeoutWalkRatio"`
 	Wins              uint16          `json:"wins"`
 	Losses            uint16          `json:"losses"`
 	Saves             uint16          `json:"saves"`
@@ -305,6 +313,9 @@ type MLBPitchingStats struct {
 	GamesFinished     uint16          `json:"gamesFinished"`
 	RunsPer9          string          `json:"runsScoredPer9"`
 	HRPer9            string          `json:"homeRunsPer9"`
+	HitsPer9          string          `json:"hitsPer9Inn"`
+	SOPer9            string          `json:"strikeoutsPer9Inn"`
+	WalksPer9         string          `json:"walksPer9Inn"`
 	InhrRunners       uint16          `json:"inheritedRunners"`
 	InhrRunnersScored uint16          `json:"inheritedRunnersScored"`
 	PassedBall        uint16          `json:"passedBall"`

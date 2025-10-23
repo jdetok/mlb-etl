@@ -39,6 +39,25 @@ func MakeETL(ds ETLProcess, sch, tbl, pkey, endpt string, params []Param, lg *lo
 	return &e
 }
 
+func MakeMultiTableETL(lg *logd.Logder, ds ETLProcess,
+	endpt string, params []Param, tables []PGTarget,
+) *ETL {
+	gr := HTTPGet{
+		Base:     BASE,
+		Endpoint: endpt,
+		Params:   params,
+		Log:      lg,
+	}
+	e := ETL{
+		Dataset:   ds,
+		Request:   gr,
+		Log:       lg,
+		PGTargets: tables,
+		RowCount:  0,
+	}
+	return &e
+}
+
 // run entire ETL processes
 func (e *ETL) RunFullETL(db *sql.DB) error {
 	if err := e.ExtractData(); err != nil {
