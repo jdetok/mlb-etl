@@ -5,16 +5,20 @@ import (
 	"testing"
 
 	"github.com/jdetok/mlb-etl/etl"
+	"github.com/jdetok/mlb-etl/pgresd"
 )
 
 func TestMultiTblETL(t *testing.T) {
-	// db, err := pgresd.ConnectTestDB("../../.env")
-	// if err != nil {
-	// 	t.Errorf("failed to connect to database | %v\n", err)
-	// }
+	// season, cause it'll be needed where it's called
+	season := "2025"
+	gameId := "777933"
+	db, err := pgresd.ConnectTestDB("../../.env")
+	if err != nil {
+		t.Errorf("failed to connect to database | %v\n", err)
+	}
 
 	metl := etl.MakeMultiTableETL(nil, &etl.RespBoxscore{},
-		"v1/game", []etl.Param{{Key: "777933"}, {Key: "boxscore"}},
+		"v1/game", []etl.Param{{Key: gameId}, {Key: "boxscore"}},
 		[]etl.PGTarget{
 			{PGSchema: "intake", PGTable: "tbtg", PGPKey: "teamid, gameid"},
 			{PGSchema: "intake", PGTable: "tptg", PGPKey: "teamid, gameid"},
@@ -25,36 +29,31 @@ func TestMultiTblETL(t *testing.T) {
 		},
 	)
 	if err := metl.ExtractData(); err != nil {
-		t.Errorf("error now\n%v", err)
+		t.Errorf("failed extracting data\n%v", err)
 	}
 
-	// fmt.Println(metl.Dataset.SliceInsertRows())
-	fmt.Println(len(metl.Dataset.SliceInsertRows()))
+	metl.Dataset.(*etl.RespBoxscore).SetSharedVals(season, gameId)
+	metl.Dataset.CleanTempFields()
 	tableSets := metl.Dataset.SliceInsertRows()[0]
-	for i, ts := range tableSets {
-		fmt.Printf("%v: %v\n++++++++++++\n\n", metl.PGTargets[i], ts)
+
+	// DO NOT DELETE
+	for i, pgt := range metl.PGTargets {
+		fmt.Printf("%v:\n%v\n++++++++++++\n\n", pgt.PGTable, tableSets[i])
+		cols, err := pgresd.ColumnsInTable(db, pgt.PGTable)
+		if err != nil {
+			t.Errorf("failed to make InSt | %v\n", err)
+		}
+		rows := tableSets[i].([][]any)
+		fmt.Println(rows)
+
+		metl.InSt = pgresd.MakeInsert(pgt.PGSchema, pgt.PGTable, pgt.PGPKey,
+			cols, rows)
+
+		if err := metl.InSt.InsertFast(db, &metl.RowCount); err != nil {
+			t.Errorf("failed to insert %d rows into %s\n%v",
+				len(rows), pgt.PGTable, err)
+		}
+
 	}
-	// for _, p := range rows[0][1].([][]any) {
-	// 	for _, val := range p {
-	// 		fmt.Printf("%v | ", val)
-	// 	}
-	// 	fmt.Println()
-	// }
-	// // {metl.Dataset}
-	// s, ok := metl.Dataset.(*etl.RespBoxscore)
-	// if !ok {
-	// 	t.Errorf("type assertion failure")
-	// }
-
-	// for _, t := range []etl.MLBTeamBoxScore{s.Teams.Away, s.Teams.Home} {
-	// 	fmt.Println("TEAM +++++++++++++++++++++++++++++++++++++++++++++++")
-	// 	fmt.Println(t.TeamStats.Batting.Avg)
-	// 	// for _, p := range t.Players {
-	// 	// 	fmt.Println(p)
-	// 	// 	fmt.Println("================================================")
-	// 	// }
-	// 	fmt.Println("done with", t.TeamDtl.Abbr, "players")
-
-	// }
 
 }

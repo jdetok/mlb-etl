@@ -13,8 +13,8 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/jdetok/golib/pgresd"
 	"github.com/jdetok/mlb-etl/logd"
+	"github.com/jdetok/mlb-etl/pgresd"
 )
 
 // get ETL struct

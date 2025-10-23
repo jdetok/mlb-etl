@@ -1,8 +1,8 @@
 package etl
 
 import (
-	"github.com/jdetok/golib/pgresd"
 	"github.com/jdetok/mlb-etl/logd"
+	"github.com/jdetok/mlb-etl/pgresd"
 )
 
 // MLB stats api base url

@@ -1,9 +1,101 @@
 package etl
 
+import (
+	"fmt"
+	"reflect"
+	"strconv"
+	"strings"
+)
+
+type Convert interface {
+	ConvertStructFields()
+}
+
+// pass season & set
+func (rb *RespBoxscore) SetSharedVals(season, gameId string) {
+	rb.Season = season
+	gId, _ := strconv.ParseUint(gameId, 10, 64)
+	rb.GameID = gId
+}
+
+// call cleanStructRecursive, uses reflect to find fields with
+// `convert:"true"` tag - finds strings that need to be numbers
 func (rb *RespBoxscore) CleanTempFields() error {
+	count := cleanStructRecursive(reflect.ValueOf(rb))
+	fmt.Println("total vals cleaned:", count)
 	return nil
 }
 
+// recursively clean tagged string fields
+func cleanStructRecursive(v reflect.Value) int {
+	if !v.IsValid() {
+		return 0
+	}
+
+	// If pointer, dereference it
+	if v.Kind() == reflect.Pointer {
+		if v.IsNil() {
+			return 0
+		}
+		v = v.Elem()
+	}
+
+	count := 0
+
+	switch v.Kind() {
+	case reflect.Struct:
+		t := v.Type()
+		for i := 0; i < v.NumField(); i++ {
+			fld := v.Field(i)
+			sf := t.Field(i)
+
+			// Recurse for nested structs or maps
+			if fld.Kind() == reflect.Struct {
+				if fld.CanAddr() {
+					count += cleanStructRecursive(fld.Addr())
+				} else {
+					count += cleanStructRecursive(fld)
+				}
+				continue
+			}
+			if fld.Kind() == reflect.Map {
+				for _, key := range fld.MapKeys() {
+					count += cleanStructRecursive(fld.MapIndex(key))
+				}
+				continue
+			}
+
+			// Clean tagged string fields
+			tag := sf.Tag.Get("convert")
+			if tag == "true" && fld.Kind() == reflect.String && fld.CanSet() {
+				str := fld.String()
+				if strings.Contains(str, ".-") || strings.Contains(str, "") {
+					fmt.Printf("updating %v | old str: %s | new str %s |\n",
+						fld.Kind(), str, "0")
+
+					fld.SetString("0")
+
+					count++
+				}
+			}
+		}
+
+	case reflect.Map:
+		for _, key := range v.MapKeys() {
+			count += cleanStructRecursive(v.MapIndex(key))
+		}
+	case reflect.Slice, reflect.Array:
+		for i := 0; i < v.Len(); i++ {
+			count += cleanStructRecursive(v.Index(i))
+		}
+	}
+
+	return count
+}
+
+// slices the data into six separate [][]any, caller shares an idx with the
+// PGTargets slice (each table gets its own [][]any to insert)
+// returns a [][]any for each target table
 func (rb *RespBoxscore) SliceInsertRows() [][]any {
 	var rows [][]any
 	var tbtgRows, tptgRows, tfdgRows, pbtgRows, pptgRows, pfdgRows [][]any
@@ -11,8 +103,9 @@ func (rb *RespBoxscore) SliceInsertRows() [][]any {
 	for _, tbs := range []MLBTeamBoxScore{rb.Teams.Away, rb.Teams.Home} {
 		// team, game. season
 		var tmMetaVals = []any{tbs.TeamDtl.ID, rb.GameID, rb.Season}
-
-		tb := tbs.TeamStats.Batting
+		ts := tbs.TeamStats
+		// ts.DashesToBlank()
+		tb := ts.Batting
 		var tbtgVals []any
 		tbtgVals = append(tbtgVals, tmMetaVals...)
 		tbtgVals = append(tbtgVals, []any{
@@ -34,14 +127,15 @@ func (rb *RespBoxscore) SliceInsertRows() [][]any {
 			tpb.FlyOuts, tpb.GndOuts, tpb.Airouts, tpb.Doubles, tpb.Triples,
 			tpb.HomeRuns, tpb.StrikeOuts, tpb.BaseOnBalls, tpb.IntnWalks,
 			tpb.Hits, tpb.HitByPitch, tpb.Avg, tpb.AtBats, tpb.OBP,
-			tpb.CaughtStealing, tpb.CaughtStealing, tpb.StolenBases,
+			tpb.CaughtStealing, tpb.StolenBases,
 			tpb.StolenBasesPct, tp.CaughtStealingPct, tp.NumPitches, tp.ERA,
 			tp.InningsPitched, tp.SaveOpps, tp.EarnedRuns, tp.Whip,
 			tp.BattersFaced, tp.CompleteGames, tp.Shutouts, tp.PitchesThrown,
 			tp.Balls, tp.Strikes, tp.StrikePct, tp.HitBatsmen, tp.Balks,
 			tp.WildPitches, tpb.Pickoffs, tp.GndToAir, tpb.RBI, tp.PitchPerInning,
 			tp.RunsPer9, tp.HRPer9, tp.InhrRunners, tp.InhrRunnersScored,
-			tpb.CatchersIntr, tpb.SacBunts, tpb.SacFlies, tpb.PopOuts, tpb.LineOuts,
+			tpb.CatchersIntr, tpb.SacBunts, tpb.SacFlies, tp.PassedBall,
+			tpb.PopOuts, tpb.LineOuts,
 		}...)
 		tptgRows = append(tptgRows, tptgVals)
 
@@ -58,11 +152,13 @@ func (rb *RespBoxscore) SliceInsertRows() [][]any {
 		for _, p := range tbs.Players {
 			// player, team, game, season
 			var prMetaVals []any
+			ps := p.Stats
+			// ps.DashesToBlank()
 			prMetaVals = append(prMetaVals, p.Person.ID)
 			prMetaVals = append(prMetaVals, tmMetaVals...)
 
 			// player batting
-			pb := p.Stats.Batting
+			pb := ps.Batting
 			var pbtgVals []any
 			pbtgVals = append(pbtgVals, prMetaVals...)
 			pbtgVals = append(pbtgVals, []any{
@@ -77,15 +173,16 @@ func (rb *RespBoxscore) SliceInsertRows() [][]any {
 			pbtgRows = append(pbtgRows, pbtgVals)
 
 			// player pitching
-			pp := p.Stats.Pitching
+			pp := ps.Pitching
 			ppb := pp.BattingFields
 			var pptgVals []any
 			pptgVals = append(pptgVals, prMetaVals...)
 			pptgVals = append(pptgVals, []any{
 				ppb.Summary, ppb.GP, ppb.FlyOuts, ppb.GndOuts, ppb.Airouts,
 				ppb.Doubles, ppb.Triples, ppb.HomeRuns, ppb.StrikeOuts, ppb.BaseOnBalls,
-				ppb.IntnWalks, ppb.Hits, ppb.HitByPitch, ppb.AtBats, ppb.CaughtStealing,
-				ppb.StolenBases, ppb.StolenBasesPct, pp.NumPitches, pp.ERA,
+				ppb.IntnWalks, ppb.Hits, ppb.HitByPitch, ppb.Avg, ppb.AtBats,
+				ppb.OBP, ppb.CaughtStealing,
+				ppb.StolenBases, ppb.StolenBasesPct, pp.CaughtStealingPct, pp.NumPitches, pp.ERA,
 				pp.InningsPitched, pp.SaveOpps, pp.Holds, pp.BlownSaves,
 				pp.EarnedRuns, pp.Whip, pp.BattersFaced, pp.Outs,
 				pp.CompleteGames, pp.Shutouts, pp.PitchesThrown, pp.Balls,
@@ -97,10 +194,11 @@ func (rb *RespBoxscore) SliceInsertRows() [][]any {
 				ppb.SacBunts, ppb.SacFlies, pp.PassedBall, ppb.PopOuts,
 				ppb.LineOuts,
 			}...)
+			// fmt.Println("player insert fields:", len(pptgVals))
 			pptgRows = append(pptgRows, pptgVals)
 
 			// player fielding
-			pf := p.Stats.Fielding
+			pf := ps.Fielding
 			var pfdgVals []any
 			pfdgVals = append(pfdgVals, prMetaVals...)
 			pfdgVals = append(pfdgVals, []any{
