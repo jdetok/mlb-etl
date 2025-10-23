@@ -96,6 +96,9 @@ func TestSeasonBoxETL(t *testing.T) {
 	}
 	betl.ChunkGameIDs()
 	fmt.Println(betl.ChunkedGameIDs)
+	for i, chunk := range betl.ChunkedGameIDs {
+		fmt.Printf("chunk %d/%d\n%v", i+1, len(betl.ChunkedGameIDs), chunk)
+	}
 	// fmt.Println(betl.GameIDs)
 
 	// metl := etl.MakeMultiTableETL(nil, &etl.RespBoxscore{},
