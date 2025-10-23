@@ -2,6 +2,7 @@ package etl
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/jdetok/mlb-etl/logd"
 )
@@ -11,7 +12,7 @@ func (b *BatchETL) LoadManyBoxScoreETL(db *sql.DB, lg *logd.Logder) error {
 	return nil
 }
 
-func (b *BatchETL) GetGameIDs(db *sql.DB, season string) error {
+func (b *BatchETL) GetGameIDs(db *sql.DB, season int) error {
 	q := `
 select gameid
 from intake.game_from_schedule
@@ -30,6 +31,22 @@ order by gdate
 		}
 		ids = append(ids, id)
 	}
-	b.GameIDs = ids
+	if len(b.GameIDs) == 0 {
+		b.GameIDs = ids
+	} else {
+		b.GameIDs = append(b.GameIDs, ids...)
+	}
 	return nil
+}
+
+func (b *BatchETL) ChunkGameIDs() {
+	chunkSize := 10
+	oglen := len(b.GameIDs)
+	var chunks [][]uint64
+	for i := 0; i < oglen; i += chunkSize {
+		end := i + chunkSize
+		chunks = append(chunks, b.GameIDs[i:end])
+	}
+	fmt.Println("total vals: ", oglen, "chunk size:", chunkSize, " | numChunks: ", len(chunks))
+	b.ChunkedGameIDs = chunks
 }

@@ -70,7 +70,7 @@ func TestSeasonBoxETL(t *testing.T) {
 		t.Errorf("failed to connect to database | %v\n", err)
 	}
 	lg.DB = db
-	start := 1990
+	start := 2024
 	end := 2025
 
 	// max number of goroutines
@@ -85,14 +85,18 @@ func TestSeasonBoxETL(t *testing.T) {
 		TotalRC:   &total_rows,
 	}
 
-	if err := betl.LoadManyBoxScoreETL(db, &lg); err != nil {
-		t.Errorf("failed to load many:\n%v", err)
-	}
+	// if err := betl.LoadManyBoxScoreETL(db, &lg); err != nil {
+	// 	t.Errorf("failed to load many:\n%v", err)
+	// }
 
-	if err := betl.GetGameIDs(db, "2025"); err != nil {
-		t.Errorf("failed to get game ids:\n%v", err)
+	for i := range end - start {
+		if err := betl.GetGameIDs(db, end-i); err != nil {
+			t.Errorf("failed to get game ids:\n%v", err)
+		}
 	}
-	fmt.Println(betl.GameIDs)
+	betl.ChunkGameIDs()
+	fmt.Println(betl.ChunkedGameIDs)
+	// fmt.Println(betl.GameIDs)
 
 	// metl := etl.MakeMultiTableETL(nil, &etl.RespBoxscore{},
 	// 	"v1/game", []etl.Param{{Key: gameId}, {Key: "boxscore"}},

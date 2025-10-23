@@ -37,10 +37,11 @@ type ETL struct {
 
 // parameters for RunManySznETL
 type BatchETL struct {
-	StartSzn  int
-	EndSzn    int
-	MaxGoRtns int
-	RowCount  int64
-	TotalRC   *int64 // global row count defined in main
-	GameIDs   []uint64
+	StartSzn       int
+	EndSzn         int
+	MaxGoRtns      int
+	RowCount       int64
+	TotalRC        *int64 // global row count defined in main
+	GameIDs        []uint64
+	ChunkedGameIDs [][]uint64
 }
