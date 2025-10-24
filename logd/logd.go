@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"runtime"
+	"sync"
 	"time"
 )
 
@@ -17,6 +18,7 @@ type Logder struct {
 	Logs []Logd
 	Prj  string
 	DB   *sql.DB
+	mu   *sync.Mutex
 }
 
 type Logd struct {
@@ -47,12 +49,47 @@ func (lg *Logder) Log(msg string, err error, rc *int64) {
 	}
 }
 
+func (lg *Logder) CCLog(msg string, err error, rc *int64, mu *sync.Mutex) {
+	var row_count int64
+	if rc == nil {
+		row_count = 0
+	} else {
+		row_count = *rc
+	}
+	l := Logd{Msg: msg, Err: err, LogTime: time.Now(), RowCount: row_count}
+	l.SetCaller()
+	l.FormatTime()
+	lg.Logs = append(lg.Logs, l)
+	l.WriteLog()
+	if rc != nil {
+		if lg.DB != nil {
+			lg.CCLogToDB(&l, mu)
+		}
+	}
+}
+
 func (lg *Logder) LogToDB(l *Logd) {
 	if lg.DB != nil {
 		lg.DB.Exec(
 			`insert into log.log (prj, msg, ltime, ltstr, caller, err, rc) values
 			($1, $2, $3, $4, $5, $6, $7)
 		`, lg.Prj, l.Msg, l.LogTime, l.TimeStr, l.Caller, l.Err, l.RowCount)
+	}
+}
+
+func (lg *Logder) CCLogToDB(l *Logd, mu *sync.Mutex) {
+	if lg.DB != nil && lg.mu != nil {
+		lg.mu.Lock()
+		_, err := lg.DB.Exec(
+			`insert into log.log (prj, msg, ltime, ltstr, caller, err, rc) values
+			($1, $2, $3, $4, $5, $6, $7)
+		`, lg.Prj, l.Msg, l.LogTime, l.TimeStr, l.Caller, l.Err, l.RowCount)
+		if err != nil {
+			fmt.Println(err)
+		}
+		lg.mu.Unlock()
+	} else {
+		return
 	}
 }
 

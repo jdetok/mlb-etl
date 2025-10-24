@@ -24,23 +24,23 @@ func (b *BatchETL) LoadManyBoxScoreETL(db *sql.DB, lg *logd.Logder,
 	}
 
 	// chunk all game ids
-	b.ChunkGameIDs(20)
+	b.ChunkGameIDs(12)
 
-	// gsem := make(chan struct{}, b.MaxGoRtns)
+	gsem := make(chan struct{}, b.MaxGoRtns)
 	var gmu sync.Mutex
 	var gwg sync.WaitGroup
 	// start a goroutine that launches ETL for each chunk of game ids
 	for i, chunk := range b.ChunkedGameIDs {
-		// gsem <- struct{}{}
+		gsem <- struct{}{}
 		gwg.Add(1)
 
 		go func(lg *logd.Logder, ggmu *sync.Mutex, i int,
 			chunk []map[uint64]string, rc *int64,
 		) {
 			defer gwg.Done()
-			// defer func() { <-gsem }() // clear one spot in sem
-			lg.Log(fmt.Sprintf("chunk %d/%d\n%v\n", i+1, len(b.ChunkedGameIDs),
-				chunk), nil, rc)
+			defer func() { <-gsem }() // clear one spot in sem
+			lg.CCLog(fmt.Sprintf("chunk %d/%d\n%v\n", i+1, len(b.ChunkedGameIDs),
+				chunk), nil, rc, &gmu)
 			// mutex and waitgroup for safe concurrency
 			var mu sync.Mutex
 			var wg sync.WaitGroup
@@ -87,7 +87,8 @@ func (b *BatchETL) LoadChunk(db *sql.DB, lg *logd.Logder, gmap map[uint64]string
 	)
 	metl.Dataset.(*RespBoxscore).SetSharedVals(season, gameId)
 	if err := metl.ExtractData(); err != nil {
-		lg.Log(fmt.Sprintf("failed extracting data\n%v", err), err, &b.RowCount)
+		lg.CCLog(fmt.Sprintf("failed extracting data\n%v", err), err,
+			&b.RowCount, mu)
 		return err
 	}
 
@@ -106,11 +107,11 @@ func (b *BatchETL) LoadChunk(db *sql.DB, lg *logd.Logder, gmap map[uint64]string
 func (e *ETL) BuildAndInsert(db *sql.DB, lg *logd.Logder, pgt *PGTarget,
 	rows [][]any,
 ) error {
-	lg.Log(fmt.Sprintf("INSERT INTO %v:\nNUMBER OF ROWS: %v\n++++++++++++\n\n",
-		pgt.PGTable, len(rows)), nil, &e.RowCount)
+	lg.Log(fmt.Sprintf("attempt to INSERT %d rows INTO %v | total rows: %d\n",
+		len(rows), pgt.PGTable, &e.RowCount), nil, &e.RowCount)
 	cols, err := pgresd.ColumnsInTable(db, pgt.PGTable)
 	if err != nil {
-		lg.Log(fmt.Sprintf("failed to make InSt | %v\n", err), err, &e.RowCount)
+		lg.Log(fmt.Sprintf("failed to get columns from db | %v\n", err), err, &e.RowCount)
 		return err
 	}
 
@@ -133,7 +134,7 @@ func (b *BatchETL) GetGameIDsSeasons(db *sql.DB, lg *logd.Logder) error {
 			lg.Log(fmt.Sprintf("failed to get game ids:\n%v\n", err), err, &b.RowCount)
 			return err
 		}
-		lg.Log(fmt.Sprintf("got %d game ids\n", len(b.GameIDs)), nil, &b.RowCount)
+		lg.Log(fmt.Sprintf("got %d game ids for %d\n", len(b.GameIDs), szn), nil, &b.RowCount)
 	}
 	return nil
 }

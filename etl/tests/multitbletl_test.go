@@ -98,7 +98,7 @@ func TestGetGs(t *testing.T) {
 	end := 2025
 
 	// max number of goroutines
-	maxcon := 20
+	maxcon := 12
 	total_rows := int64(0)
 
 	b := etl.BatchETL{
