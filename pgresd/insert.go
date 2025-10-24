@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/jdetok/mlb-etl/syncd"
 )
@@ -121,10 +120,8 @@ func (ins *InsertStmnt) InsertFast(db *sql.DB, global_row_count *int64) error {
 				return
 			}
 			syncd.IncrementRC(&mu, global_row_count, &ra)
-			// mu.Lock()
-			// *global_row_count += ra // add rows affected to total
-			// mu.Unlock()
-			time.Sleep(1 * time.Second)
+
+			// time.Sleep(1 * time.Second)
 		}(i, c)
 	}
 
