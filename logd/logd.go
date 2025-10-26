@@ -26,11 +26,11 @@ type Logd struct {
 	Caller   string
 	LogTime  time.Time
 	TimeStr  string
-	Err      error
+	Err      bool
 	RowCount int64
 }
 
-func (lg *Logder) Log(msg string, err error, rc *int64) {
+func (lg *Logder) Log(msg string, err bool, rc *int64) {
 	var row_count int64
 	if rc == nil {
 		row_count = 0
@@ -49,22 +49,18 @@ func (lg *Logder) Log(msg string, err error, rc *int64) {
 	}
 }
 
-func (lg *Logder) CCLog(msg string, err error, rc *int64, mu *sync.Mutex) {
-	var row_count int64
-	if rc == nil {
-		row_count = 0
-	} else {
-		row_count = *rc
-	}
-	l := Logd{Msg: msg, Err: err, LogTime: time.Now(), RowCount: row_count}
+func (lg *Logder) CCLog(msg string, err bool, rc int64, mu *sync.Mutex) {
+	// var row_count int64
+
+	// row_count = rc
+
+	l := Logd{Msg: msg, Err: err, LogTime: time.Now(), RowCount: rc}
 	l.SetCaller()
 	l.FormatTime()
 	lg.Logs = append(lg.Logs, l)
 	l.WriteLog()
-	if rc != nil {
-		if lg.DB != nil {
-			lg.CCLogToDB(&l, mu)
-		}
+	if lg.DB != nil {
+		lg.CCLogToDB(&l, mu)
 	}
 }
 
@@ -94,7 +90,7 @@ func (lg *Logder) CCLogToDB(l *Logd, mu *sync.Mutex) {
 }
 
 func (l *Logd) WriteLog() {
-	if l.Err != nil {
+	if l.Err {
 		l.ErrLog()
 	}
 	fmt.Printf("%s | caller: %s\n%s\n", l.TimeStr, l.Caller, l.Msg)

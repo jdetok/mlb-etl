@@ -62,19 +62,19 @@ func MakeMultiTableETL(lg *logd.Logder, ds ETLProcess,
 // run entire ETL processes
 func (e *ETL) RunFullETL(db *sql.DB) error {
 	if err := e.ExtractData(); err != nil {
-		e.Log.Log(fmt.Sprintf("** error extracting data from %s", e.Request.URL), err, nil)
+		e.Log.Log(fmt.Sprintf("** error extracting data from %s", e.Request.URL), true, nil)
 		return err
 	}
 
 	// call the appropriate struct method from the interface
 	if err := e.Dataset.CleanTempFields(); err != nil {
-		e.Log.Log("** error cleaning fields for ETLProcess implementation struct", err, nil)
+		e.Log.Log("** error cleaning fields for ETLProcess implementation struct", true, nil)
 		return err
 	}
 
 	cols, err := pgresd.ColumnsInTable(db, e.PgTable)
 	if err != nil {
-		e.Log.Log("** error making slice of columns", err, nil)
+		e.Log.Log("** error making slice of columns", true, nil)
 		return err
 	}
 
@@ -118,11 +118,11 @@ func (b *BatchETL) RunManySznETL(db *sql.DB, lg *logd.Logder) error {
 				}, lg,
 			)
 			if err := e.RunFullETL(db); err != nil {
-				lg.Log("schedule endpoint failed", err, rc)
+				lg.Log("schedule endpoint failed", true, rc)
 				syncd.CatchErr(&errMu, &allErrs, &err)
 			}
 
-			lg.Log(fmt.Sprintf("done with schedule etl for %s", szn), nil, &e.RowCount)
+			lg.Log(fmt.Sprintf("done with schedule etl for %s", szn), true, &e.RowCount)
 			syncd.IncrementRC(&mu, rc, &e.RowCount)
 
 			var pl RespPlayers
@@ -135,11 +135,11 @@ func (b *BatchETL) RunManySznETL(db *sql.DB, lg *logd.Logder) error {
 					{Key: "season", Val: pl.Season}}, lg)
 
 			if err := ple.RunFullETL(db); err != nil {
-				lg.Log("error with players endpoint", err, rc)
+				lg.Log("error with players endpoint", true, rc)
 				syncd.CatchErr(&errMu, &allErrs, &err)
 			}
 
-			lg.Log(fmt.Sprintf("done with players etl for %s", pl.Season), nil, &ple.RowCount)
+			lg.Log(fmt.Sprintf("done with players etl for %s", pl.Season), false, &ple.RowCount)
 
 			syncd.IncrementRC(&mu, rc, &ple.RowCount)
 
@@ -149,11 +149,11 @@ func (b *BatchETL) RunManySznETL(db *sql.DB, lg *logd.Logder) error {
 				[]Param{{Key: "season", Val: szn}}, lg)
 
 			if err := te.RunFullETL(db); err != nil {
-				lg.Log("error with teams endpoint", err, rc)
+				lg.Log("error with teams endpoint", false, rc)
 				syncd.CatchErr(&errMu, &allErrs, &err)
 			}
 
-			lg.Log(fmt.Sprintf("done with teams etl for %s", szn), nil, rc)
+			lg.Log(fmt.Sprintf("done with teams etl for %s", szn), false, rc)
 
 			syncd.IncrementRC(&mu, rc, &te.RowCount)
 		}(i, &b.RowCount)
@@ -163,14 +163,14 @@ func (b *BatchETL) RunManySznETL(db *sql.DB, lg *logd.Logder) error {
 	numErrs := len(allErrs)
 	if numErrs > 0 {
 		err := fmt.Errorf("%d errors occured", numErrs)
-		lg.Log("RunManySznETL error:", err, &b.RowCount)
+		lg.Log("RunManySznETL error:", true, &b.RowCount)
 		for i, e := range allErrs {
-			lg.Log(fmt.Sprintf("error %d/%d", i, numErrs), e, &b.RowCount)
+			lg.Log(fmt.Sprintf("error %d/%d", i, e), true, &b.RowCount)
 		}
 		return err
 	}
 	lg.Log(fmt.Sprintf("FINAL ROW COUNT: %d",
-		b.RowCount), nil, &b.RowCount)
+		b.RowCount), false, &b.RowCount)
 	return nil
 }
 

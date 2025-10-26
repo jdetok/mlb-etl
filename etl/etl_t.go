@@ -45,4 +45,5 @@ type BatchETL struct {
 	TotalRC        *int64 // global row count defined in main
 	GameIDs        []map[uint64]string
 	ChunkedGameIDs [][]map[uint64]string
+	E              *ETL
 }

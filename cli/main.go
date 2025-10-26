@@ -18,12 +18,12 @@ func ErrHndl(err error) {
 
 func main() {
 	lg := logd.Logder{Prj: "mlb-etl"}
-	lg.Log("starting", nil, nil)
+	lg.Log("starting", false, nil)
 
 	// database connection
 	db, dbErr := pgresd.ConnectDB()
 	if dbErr != nil {
-		lg.Log("couldn't connect to db", dbErr, nil)
+		lg.Log("couldn't connect to db", true, nil)
 	}
 	db.SetMaxOpenConns(200)
 	db.SetMaxIdleConns(200)
@@ -48,6 +48,6 @@ func main() {
 
 	err := betl.RunManySznETL(db, &lg)
 	if err != nil {
-		lg.Log("error(s) occured running many seasons", err, betl.TotalRC)
+		lg.Log("error(s) occured running many seasons", true, betl.TotalRC)
 	}
 }

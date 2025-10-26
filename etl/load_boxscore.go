@@ -19,19 +19,19 @@ func (b *BatchETL) LoadManyBoxScoreETL(db *sql.DB, lg *logd.Logder,
 ) error {
 	// query database for all game ids for specified seasons
 	if err := b.GetGameIDsSeasons(db, lg); err != nil {
-		lg.Log(fmt.Sprintf("failed to get game ids and seasons:\n%v\n", err), err, &b.RowCount)
+		lg.Log(fmt.Sprintf("failed to get game ids and seasons:\n%v\n", err), true, &b.RowCount)
 		return err
 	}
 
 	// chunk all game ids
 	b.ChunkGameIDs(12)
 
-	gsem := make(chan struct{}, b.MaxGoRtns)
+	gsem := make(chan int, b.MaxGoRtns)
 	var gmu sync.Mutex
 	var gwg sync.WaitGroup
 	// start a goroutine that launches ETL for each chunk of game ids
 	for i, chunk := range b.ChunkedGameIDs {
-		gsem <- struct{}{}
+		gsem <- 1
 		gwg.Add(1)
 
 		go func(lg *logd.Logder, ggmu *sync.Mutex, i int,
@@ -40,7 +40,7 @@ func (b *BatchETL) LoadManyBoxScoreETL(db *sql.DB, lg *logd.Logder,
 			defer gwg.Done()
 			defer func() { <-gsem }() // clear one spot in sem
 			lg.CCLog(fmt.Sprintf("chunk %d/%d\n%v\n", i+1, len(b.ChunkedGameIDs),
-				chunk), nil, rc, &gmu)
+				chunk), false, *rc, &gmu)
 			// mutex and waitgroup for safe concurrency
 			var mu sync.Mutex
 			var wg sync.WaitGroup
@@ -61,12 +61,14 @@ func (b *BatchETL) LoadManyBoxScoreETL(db *sql.DB, lg *logd.Logder,
 	return nil
 }
 
+// make error chan
 func (b *BatchETL) LoadChunk(db *sql.DB, lg *logd.Logder, gmap map[uint64]string,
 	sem *chan struct{}, wg *sync.WaitGroup, mu *sync.Mutex,
 ) error {
 	defer wg.Done()
 	defer func() { <-*sem }() // clear one spot in sem
 
+	errs := make(chan string)
 	var gameId string
 	var season string
 	for gId, szn := range gmap {
@@ -87,9 +89,7 @@ func (b *BatchETL) LoadChunk(db *sql.DB, lg *logd.Logder, gmap map[uint64]string
 	)
 	metl.Dataset.(*RespBoxscore).SetSharedVals(season, gameId)
 	if err := metl.ExtractData(); err != nil {
-		lg.CCLog(fmt.Sprintf("failed extracting data\n%v", err), err,
-			&b.RowCount, mu)
-		return err
+		errs <- fmt.Sprintf("failed to extract data from %s | %v\n", metl.Request.URL, err)
 	}
 
 	metl.Dataset.CleanTempFields()
@@ -97,9 +97,15 @@ func (b *BatchETL) LoadChunk(db *sql.DB, lg *logd.Logder, gmap map[uint64]string
 	for i, pgt := range metl.PGTargets {
 		rows := tableSets[i].([][]any)
 		if err := metl.BuildAndInsert(db, lg, &pgt, rows); err != nil {
-			lg.Log(fmt.Sprintf("failed to do insert | %v\n", err), err, &b.RowCount)
-			return err
+			errs <- fmt.Sprintf("failed to do insert into %s | %v\n", pgt.PGTable, err)
 		}
+	}
+	go func() {
+		close(errs)
+	}()
+
+	for e := range errs {
+		lg.CCLog(e, true, b.RowCount, mu)
 	}
 	return nil
 }
@@ -108,10 +114,10 @@ func (e *ETL) BuildAndInsert(db *sql.DB, lg *logd.Logder, pgt *PGTarget,
 	rows [][]any,
 ) error {
 	lg.Log(fmt.Sprintf("attempt to INSERT %d rows INTO %v | total rows: %d\n",
-		len(rows), pgt.PGTable, &e.RowCount), nil, &e.RowCount)
+		len(rows), pgt.PGTable, &e.RowCount), false, &e.RowCount)
 	cols, err := pgresd.ColumnsInTable(db, pgt.PGTable)
 	if err != nil {
-		lg.Log(fmt.Sprintf("failed to get columns from db | %v\n", err), err, &e.RowCount)
+		lg.Log(fmt.Sprintf("failed to get columns from db | %v\n", err), true, &e.RowCount)
 		return err
 	}
 
@@ -120,21 +126,21 @@ func (e *ETL) BuildAndInsert(db *sql.DB, lg *logd.Logder, pgt *PGTarget,
 
 	if err := e.InSt.InsertFast(db, &e.RowCount); err != nil {
 		lg.Log(fmt.Sprintf("failed to insert %d rows into %s\n%v",
-			len(rows), pgt.PGTable, err), err, &e.RowCount)
+			len(rows), pgt.PGTable, err), true, &e.RowCount)
 		return err
 	}
 	lg.Log(fmt.Sprintf("inserted %d rows into %s\n",
-		len(rows), pgt.PGTable), nil, &e.RowCount)
+		len(rows), pgt.PGTable), false, &e.RowCount)
 	return nil
 }
 
 func (b *BatchETL) GetGameIDsSeasons(db *sql.DB, lg *logd.Logder) error {
 	for szn := b.StartSzn; szn <= b.EndSzn; szn++ {
 		if err := b.GetGameIdSzn(db, szn); err != nil {
-			lg.Log(fmt.Sprintf("failed to get game ids:\n%v\n", err), err, &b.RowCount)
+			lg.Log(fmt.Sprintf("failed to get game ids:\n%v\n", err), true, &b.RowCount)
 			return err
 		}
-		lg.Log(fmt.Sprintf("got %d game ids for %d\n", len(b.GameIDs), szn), nil, &b.RowCount)
+		lg.Log(fmt.Sprintf("got %d game ids for %d\n", len(b.GameIDs), szn), true, &b.RowCount)
 	}
 	return nil
 }
@@ -178,6 +184,6 @@ func (b *BatchETL) ChunkGameIDs(chunkSize int) {
 	}
 	b.Log.Log(fmt.Sprintf(
 		"total vals: %d | chunk size: %d | numChunks: %d |",
-		oglen, chunkSize, len(chunks)), nil, b.TotalRC)
+		oglen, chunkSize, len(chunks)), false, b.TotalRC)
 	b.ChunkedGameIDs = chunks
 }

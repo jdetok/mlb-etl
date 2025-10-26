@@ -62,7 +62,7 @@ func TestMultiTblETL(t *testing.T) {
 // start with TestMultiTblETL, but call all games for a season
 func TestSeasonBoxETL(t *testing.T) {
 	lg := logd.Logder{Prj: "mlb-etl-test"}
-	lg.Log("starting", nil, nil)
+	lg.Log("starting", false, nil)
 
 	// database connection
 	db, err := pgresd.ConnectTestDB("../../.env")
@@ -86,7 +86,8 @@ func TestSeasonBoxETL(t *testing.T) {
 		Log:       &lg,
 	}
 
-	betl.LoadManyBoxScoreETL(db, &lg)
+	// betl.LoadManyBoxScoreETL(db, &lg)
+	betl.BoxScoreETL(db, &lg, start, end, maxcon, 50, 10)
 }
 
 func TestGetGs(t *testing.T) {

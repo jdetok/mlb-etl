@@ -70,8 +70,8 @@ func cleanStructRecursive(v reflect.Value) int {
 			if tag == "true" && fld.Kind() == reflect.String && fld.CanSet() {
 				str := fld.String()
 				if strings.Contains(str, ".-") || strings.Contains(str, "") {
-					fmt.Printf("updating %v | old str: %s | new str %s |\n",
-						fld.Kind(), str, "0")
+					// fmt.Printf("updating %v | old str: %s | new str %s |\n",
+					// 	fld.Kind(), str, "0")
 
 					fld.SetString("0")
 
