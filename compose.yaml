@@ -1,26 +1,40 @@
 services:
-  pg_mlb_dev:
+  pg_mlb:
     build: .
     env_file: 
       - .env
-    container_name: pg_mlb_dev
+    container_name: pg_mlb
     ports:
       - "3456:5432"
     networks:
-      pg_mlb_net:
-        ipv4_address: 10.0.42.182
+      mlb_datanet:
+        ipv4_address: 10.0.43.182
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 2s
       timeout: 2s
       retries: 10
+      
+  mongo_mlb:
+    image: mongo:latest
+    container_name: mongo_mlb
+    networks:
+      mlb_datanet:
+        ipv4_address: 10.0.43.183
+    ports:
+      - "27817:27017"
+    volumes:
+      - ./mongo:/data/db
+    env_file:
+      - .env
+      
 
 networks:
-  pg_mlb_net:
-    name: pg_mlb_net
+  mlb_datanet:
+    name: mlb_datanet
     driver: bridge
     ipam:
       config:
-        - subnet: 10.0.42.0/24
-          gateway: 10.0.42.1
+        - subnet: 10.0.43.0/24
+          gateway: 10.0.43.1
